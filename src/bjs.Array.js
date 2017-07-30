@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 bjs.Array = class Array extends bjs.Object {
 

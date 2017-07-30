@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 bjs.Object = class Object {
 

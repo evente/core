@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 bjs.Selector = class Selector extends bjs.Array {
 
@@ -22,14 +22,7 @@ bjs.Selector = class Selector extends bjs.Array {
     }
 
     addClass(classes) {
-        if ( typeof classes == 'string' )
-            classes = classes.split(' ');
-        for ( let i = 0; i < this.$.length; i++ ) {
-            for ( let j = 0; j < classes.length; j++ ) {
-                this.$[i].classList.add(classes[j]);
-            }
-        }
-        return this;
+        return this._class('add', classes);
     }
 
     end() {
@@ -51,6 +44,25 @@ bjs.Selector = class Selector extends bjs.Array {
             }
         }
         return all === true ? true : false;
+    }
+
+    html(html) {
+        if ( html !== undefined ) {
+            for ( let i = 0; i < this.$.length; i++ ) {
+                this.$[i].innerHTML = html;
+            }
+            return this;
+        } else {
+            if ( this.$.length > 1 ) {
+                let htmls = [];
+                for ( let i = 0; i < this.$.length; i++ ) {
+                    htmls.push(this.$[i].innerHTML);
+                }
+                return htmls;
+            } else if ( this.$.length == 1 ) {
+                return this.$[0].innerHTML;
+            }
+        }
     }
 
     find(selector) {
@@ -78,22 +90,42 @@ bjs.Selector = class Selector extends bjs.Array {
     }
 
     removeClass(classes) {
-        if ( typeof classes == 'string' )
-            classes = classes.split(' ');
-        for ( let i = 0; i < this.$.length; i++ ) {
-            for ( let j = 0; j < classes.length; j++ ) {
-                this.$[i].classList.remove(classes[j]);
+        return this._class('remove', classes);
+    }
+
+    text(text) {
+        if ( text !== undefined ) {
+            for ( let i = 0; i < this.$.length; i++ ) {
+                this.$[i].textContent = text;
+            }
+            return this;
+        } else {
+            if ( this.$.length > 1 ) {
+                let texts = [];
+                for ( let i = 0; i < this.$.length; i++ ) {
+                    texts.push(this.$[i].textContent);
+                }
+                return texts;
+            } else if ( this.$.length == 1 ) {
+                return this.$[0].textContent;
             }
         }
-        return this;
     }
 
     toggleClass(classes, active) {
+        return this._class('toggle', classes);
+    }
+
+    _class(action, classes, active) {
         if ( typeof classes == 'string' )
             classes = classes.split(' ');
         for ( let i = 0; i < this.$.length; i++ ) {
             for ( let j = 0; j < classes.length; j++ ) {
-                this.$[i].classList.toggle(classes[j], active);
+                if ( action == 'toggle' ) {
+                    this.$[i].classList.toggle(classes[j], active);
+                } else {
+                    this.$[i].classList[action](classes[j]);
+                }
             }
         }
         return this;
