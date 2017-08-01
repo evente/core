@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "babel-minify": "^0.1.12",
+    "node-watch": "^0.5.5"
+  }
+}

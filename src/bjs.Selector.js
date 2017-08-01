@@ -1,5 +1,3 @@
-'use strict';
-
 bjs.Selector = class Selector extends bjs.Array {
 
     constructor(options, selector) {
