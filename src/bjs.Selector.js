@@ -1,25 +1,16 @@
-bjs.Selector = class Selector extends Array {
+bjs.Selector = class Selector extends bjs.Array {
 
     constructor(options, selector) {
         super();
-        let tmp;
-        switch (typeof options) {
-            case 'string':
-                tmp = bjs.Selector.$(options);
+        switch (options.constructor.name) {
+            case 'String':
+                bjs.Array.prototype.push.apply(this, document.querySelectorAll(options));
                 break;
-            case 'object':
-                tmp = options;
+            case 'Array':
+                bjs.Array.prototype.push.apply(this, options);
                 break;
         }
-        for ( let i = 0; i < tmp.length; i++ )
-            this.push(tmp[i]);
         this.selector = selector;
-    }
-
-    static $(selector) {
-        return Array.prototype.slice.call(
-            document.querySelectorAll(selector)
-        );
     }
 
     addClass(classes) {
@@ -79,7 +70,7 @@ bjs.Selector = class Selector extends Array {
     }
 
     parent() {
-        if ( this.$.length > 1 ) {
+        if ( this.length > 1 ) {
             let parents = [];
             for ( let i = 0; i < this.length; i++ ) {
                 parents.push(this[i].parentNode);

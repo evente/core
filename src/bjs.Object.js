@@ -1,5 +1,7 @@
-bjs.Object = class Object {
+bjs.Object = class extends Object {
 
-    constructor() {}
+    constructor() {
+        super();
+    }
 
 };
