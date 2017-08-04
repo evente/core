@@ -1,15 +1,18 @@
-bjs.Selector = class Selector extends bjs.Array {
+bjs.Selector = class Selector extends Array {
 
     constructor(options, selector) {
         super();
+        let tmp;
         switch (typeof options) {
             case 'string':
-                this.$ = bjs.Selector.$(options);
+                tmp = bjs.Selector.$(options);
                 break;
             case 'object':
-                this.$ = options;
+                tmp = options;
                 break;
         }
+        for ( let i = 0; i < tmp.length; i++ )
+            this.push(tmp[i]);
         this.selector = selector;
     }
 
@@ -28,13 +31,13 @@ bjs.Selector = class Selector extends bjs.Array {
     }
 
     get(index) {
-        return this.$[index];
+        return this[index];
     }
 
     hasClass(className, all) {
         let tmp;
-        for ( let i = 0; i < this.$.length; i++ ) {
-            tmp = this.$[i].classList.contains(className);
+        for ( let i = 0; i < this.length; i++ ) {
+            tmp = this[i].classList.contains(className);
             if ( all !== true ) {
                 if ( tmp ) return true;
             } else {
@@ -46,19 +49,19 @@ bjs.Selector = class Selector extends bjs.Array {
 
     html(html) {
         if ( html !== undefined ) {
-            for ( let i = 0; i < this.$.length; i++ ) {
-                this.$[i].innerHTML = html;
+            for ( let i = 0; i < this.length; i++ ) {
+                this[i].innerHTML = html;
             }
             return this;
         } else {
-            if ( this.$.length > 1 ) {
+            if ( this.length > 1 ) {
                 let htmls = [];
-                for ( let i = 0; i < this.$.length; i++ ) {
-                    htmls.push(this.$[i].innerHTML);
+                for ( let i = 0; i < this.length; i++ ) {
+                    htmls.push(this[i].innerHTML);
                 }
                 return htmls;
-            } else if ( this.$.length == 1 ) {
-                return this.$[0].innerHTML;
+            } else if ( this.length == 1 ) {
+                return this[0].innerHTML;
             }
         }
     }
@@ -66,8 +69,8 @@ bjs.Selector = class Selector extends bjs.Array {
     find(selector) {
         let nodes = [];
         let tmp;
-        for ( let i = 0; i < this.$.length; i++ ) {
-            tmp = this.$[i].querySelectorAll(selector);
+        for ( let i = 0; i < this.length; i++ ) {
+            tmp = this[i].querySelectorAll(selector);
             for ( let i = 0; i < tmp.length; i++ ) {
                 nodes.push(tmp[i]);
             }
@@ -78,12 +81,12 @@ bjs.Selector = class Selector extends bjs.Array {
     parent() {
         if ( this.$.length > 1 ) {
             let parents = [];
-            for ( let i = 0; i < this.$.length; i++ ) {
-                parents.push(this.$[i].parentNode);
+            for ( let i = 0; i < this.length; i++ ) {
+                parents.push(this[i].parentNode);
             }
             return new bjs.Selector(parents, this);
-        } else if ( this.$.length == 1 ) {
-            return new bjs.Selector(this.$[0].parentNode, this);
+        } else if ( this.length == 1 ) {
+            return new bjs.Selector(this[0].parentNode, this);
         }
     }
 
@@ -93,19 +96,19 @@ bjs.Selector = class Selector extends bjs.Array {
 
     text(text) {
         if ( text !== undefined ) {
-            for ( let i = 0; i < this.$.length; i++ ) {
-                this.$[i].textContent = text;
+            for ( let i = 0; i < this.length; i++ ) {
+                this[i].textContent = text;
             }
             return this;
         } else {
-            if ( this.$.length > 1 ) {
+            if ( this.length > 1 ) {
                 let texts = [];
-                for ( let i = 0; i < this.$.length; i++ ) {
-                    texts.push(this.$[i].textContent);
+                for ( let i = 0; i < this.length; i++ ) {
+                    texts.push(this[i].textContent);
                 }
                 return texts;
-            } else if ( this.$.length == 1 ) {
-                return this.$[0].textContent;
+            } else if ( this.length == 1 ) {
+                return this[0].textContent;
             }
         }
     }
@@ -117,12 +120,12 @@ bjs.Selector = class Selector extends bjs.Array {
     _class(action, classes, active) {
         if ( typeof classes == 'string' )
             classes = classes.split(' ');
-        for ( let i = 0; i < this.$.length; i++ ) {
+        for ( let i = 0; i < this.length; i++ ) {
             for ( let j = 0; j < classes.length; j++ ) {
                 if ( action == 'toggle' ) {
-                    this.$[i].classList.toggle(classes[j], active);
+                    this[i].classList.toggle(classes[j], active);
                 } else {
-                    this.$[i].classList[action](classes[j]);
+                    this[i].classList[action](classes[j]);
                 }
             }
         }
