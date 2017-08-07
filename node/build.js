@@ -5,10 +5,15 @@ let babelMinify = require('babel-minify');
 let inputDir = '../src/';
 let outputFile = '../build/bjs.min.js';
 let inputFiles = [
+    // Order has matter
     'bjs.js',
-    'bjs.Object.js',
+    'bjs.Model.js',
+    // Order has no matter - ordered by name
+    'bjs.App.js',
     'bjs.Array.js',
-    'bjs.Selector.js'
+    'bjs.Object.js',
+    'bjs.Resource.js',
+    'bjs.Selector.js',
 ];
 
 watch(inputDir, { recursive: true }, function(evt, name) {
@@ -18,7 +23,11 @@ watch(inputDir, { recursive: true }, function(evt, name) {
         console.log(inputDir + file);
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
-    let outputCode = babelMinify(inputCode);
-    fs.writeFileSync(outputFile, outputCode);
-    console.log('Rebuild done!');
+    try {
+        let outputCode = babelMinify(inputCode);
+        fs.writeFileSync(outputFile, outputCode);
+        console.log('Rebuild done!');
+    } catch (e) {
+        console.log('Rebuild cannot be done! Source code has errors!');
+    }
 });

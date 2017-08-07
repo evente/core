@@ -1,20 +1,44 @@
-bjs.Selector = class Selector extends bjs.Array {
+bjs.Selector = class Selector extends Array {
 
     constructor(options, selector) {
         super();
         switch (options.constructor.name) {
             case 'String':
-                bjs.Array.prototype.push.apply(this, document.querySelectorAll(options));
+                bjs.Selector.prototype.push.apply(this, document.querySelectorAll(options));
                 break;
             case 'Array':
-                bjs.Array.prototype.push.apply(this, options);
+                bjs.Selector.prototype.push.apply(this, options);
                 break;
+            default:
+                if ( options instanceof Node )
+                    this.push(options);
+                else
+                    console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
         }
         this.selector = selector;
     }
 
     addClass(classes) {
         return this._class('add', classes);
+    }
+
+    attr(name, value) {
+        if ( value !== undefined ) {
+            for ( let i = 0; i < this.length; i++ ) {
+                this[i].setAttribute(name, value);
+            }
+            return this;
+        } else {
+            if ( this.length > 1 ) {
+                let attributes = [];
+                for ( let i = 0; i < this.length; i++ ) {
+                    attributes.push(this[i].getAttribute(name));
+                }
+                return attributes;
+            } else if ( this.length === 1 ) {
+                return this[0].getAttribute(name);
+            }
+        }
     }
 
     end() {
@@ -51,7 +75,7 @@ bjs.Selector = class Selector extends bjs.Array {
                     htmls.push(this[i].innerHTML);
                 }
                 return htmls;
-            } else if ( this.length == 1 ) {
+            } else if ( this.length === 1 ) {
                 return this[0].innerHTML;
             }
         }
@@ -76,7 +100,7 @@ bjs.Selector = class Selector extends bjs.Array {
                 parents.push(this[i].parentNode);
             }
             return new bjs.Selector(parents, this);
-        } else if ( this.length == 1 ) {
+        } else if ( this.length === 1 ) {
             return new bjs.Selector(this[0].parentNode, this);
         }
     }
@@ -98,7 +122,7 @@ bjs.Selector = class Selector extends bjs.Array {
                     texts.push(this[i].textContent);
                 }
                 return texts;
-            } else if ( this.length == 1 ) {
+            } else if ( this.length === 1 ) {
                 return this[0].textContent;
             }
         }
@@ -109,11 +133,11 @@ bjs.Selector = class Selector extends bjs.Array {
     }
 
     _class(action, classes, active) {
-        if ( typeof classes == 'string' )
+        if ( typeof classes === 'string' )
             classes = classes.split(' ');
         for ( let i = 0; i < this.length; i++ ) {
             for ( let j = 0; j < classes.length; j++ ) {
-                if ( action == 'toggle' ) {
+                if ( action === 'toggle' ) {
                     this[i].classList.toggle(classes[j], active);
                 } else {
                     this[i].classList[action](classes[j]);
