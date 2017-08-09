@@ -63,22 +63,16 @@ bjs.Selector = class Selector extends Array {
     }
 
     html(html) {
-        if ( html !== undefined ) {
-            for ( let i = 0; i < this.length; i++ ) {
-                this[i].innerHTML = html;
-            }
-            return this;
-        } else {
-            if ( this.length > 1 ) {
-                let htmls = [];
-                for ( let i = 0; i < this.length; i++ ) {
-                    htmls.push(this[i].innerHTML);
-                }
-                return htmls;
-            } else if ( this.length === 1 ) {
-                return this[0].innerHTML;
-            }
-        }
+		return this._forEach(html, function(obj, method, html){
+			switch (method) {
+				case 'get':
+					return obj.innerHTML;
+				break;
+				case 'set':
+					obj.innerHTML = html;
+				break;
+			}
+		});
     }
 
     find(selector) {
@@ -94,15 +88,11 @@ bjs.Selector = class Selector extends Array {
     }
 
     parent() {
-        if ( this.length > 1 ) {
-            let parents = [];
-            for ( let i = 0; i < this.length; i++ ) {
-                parents.push(this[i].parentNode);
-            }
-            return new bjs.Selector(parents, this);
-        } else if ( this.length === 1 ) {
-            return new bjs.Selector(this[0].parentNode, this);
-        }
+		return this._forEach(undefined, function(obj, method){
+			if ( method == 'get' ) {
+				return obj.parentNode;
+			}
+		});
     }
 
     removeClass(classes) {
@@ -110,22 +100,16 @@ bjs.Selector = class Selector extends Array {
     }
 
     text(text) {
-        if ( text !== undefined ) {
-            for ( let i = 0; i < this.length; i++ ) {
-                this[i].textContent = text;
-            }
-            return this;
-        } else {
-            if ( this.length > 1 ) {
-                let texts = [];
-                for ( let i = 0; i < this.length; i++ ) {
-                    texts.push(this[i].textContent);
-                }
-                return texts;
-            } else if ( this.length === 1 ) {
-                return this[0].textContent;
-            }
-        }
+		return this._forEach(text, function(obj, method, text){
+			switch (method) {
+				case 'get':
+					return obj.textContent;
+				break;
+				case 'set':
+					obj.textContent = text;
+				break;
+			}
+		});
     }
 
     toggleClass(classes, active) {
@@ -146,5 +130,26 @@ bjs.Selector = class Selector extends Array {
         }
         return this;
     }
+
+	_forEach(data, callback) {
+		if ( callback === undefined )
+			return this;
+        if ( data !== undefined ) {
+            for ( let i = 0; i < this.length; i++ ) {
+				callback(this[i], 'set', data);
+            }
+            return this;
+        } else {
+            if ( this.length > 1 ) {
+                let tmp = [];
+                for ( let i = 0; i < this.length; i++ ) {
+                    tmp.push(callback(this[i], 'get'));
+                }
+                return tmp;
+            } else if ( this.length === 1 ) {
+                return callback(this[0], 'get');
+            }
+        }
+	}
 
 };

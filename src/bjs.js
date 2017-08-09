@@ -1,11 +1,11 @@
 'use strict';
 
-let bjs = function(selector) {
+var bjs = function(selector) {
     if ( selector !== undefined )
         return new bjs.Selector(selector);
 }
 
-let $ = bjs;
+var $ = bjs;
 
 // Object extensions
 Object.prototype.getProperty = function(field) {
