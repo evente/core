@@ -23,22 +23,11 @@ bjs.Selector = class Selector extends Array {
     }
 
     attr(name, value) {
-        if ( value !== undefined ) {
-            for ( let i = 0; i < this.length; i++ ) {
-                this[i].setAttribute(name, value);
-            }
-            return this;
-        } else {
-            if ( this.length > 1 ) {
-                let attributes = [];
-                for ( let i = 0; i < this.length; i++ ) {
-                    attributes.push(this[i].getAttribute(name));
-                }
-                return attributes;
-            } else if ( this.length === 1 ) {
-                return this[0].getAttribute(name);
-            }
-        }
+        return this._forEach({
+            'prop': 'attr',
+            'name': name,
+            'value': value
+        });
     }
 
     end() {
@@ -63,16 +52,10 @@ bjs.Selector = class Selector extends Array {
     }
 
     html(html) {
-		return this._forEach(html, function(obj, method, html){
-			switch (method) {
-				case 'get':
-					return obj.innerHTML;
-				break;
-				case 'set':
-					obj.innerHTML = html;
-				break;
-			}
-		});
+        return this._forEach({
+            'prop': 'html',
+            'value': html
+        });
     }
 
     find(selector) {
@@ -88,11 +71,9 @@ bjs.Selector = class Selector extends Array {
     }
 
     parent() {
-		return this._forEach(undefined, function(obj, method){
-			if ( method == 'get' ) {
-				return obj.parentNode;
-			}
-		});
+        return this._forEach({
+            'prop': 'parent'
+        });
     }
 
     removeClass(classes) {
@@ -100,16 +81,10 @@ bjs.Selector = class Selector extends Array {
     }
 
     text(text) {
-		return this._forEach(text, function(obj, method, text){
-			switch (method) {
-				case 'get':
-					return obj.textContent;
-				break;
-				case 'set':
-					obj.textContent = text;
-				break;
-			}
-		});
+        return this._forEach({
+            'prop': 'text',
+            'value': text
+        });
     }
 
     toggleClass(classes, active) {
@@ -131,25 +106,47 @@ bjs.Selector = class Selector extends Array {
         return this;
     }
 
-	_forEach(data, callback) {
-		if ( callback === undefined )
-			return this;
-        if ( data !== undefined ) {
+    _forEach(options) {
+        if ( options.value !== undefined ) {
             for ( let i = 0; i < this.length; i++ ) {
-				callback(this[i], 'set', data);
+                switch ( options.prop ) {
+                    case 'attr':
+                        this[i].setAttribute(options.name, options.value);
+                    break;
+                    case 'html':
+                        this[i].innerHTML = options.value;
+                    break;
+                    case 'text':
+                        this[i].textContent = options.value;
+                    break;
+                }
             }
             return this;
         } else {
-            if ( this.length > 1 ) {
-                let tmp = [];
-                for ( let i = 0; i < this.length; i++ ) {
-                    tmp.push(callback(this[i], 'get'));
+            let tmp = [];
+            let result;
+            for ( let i = 0; i < this.length; i++ ) {
+                switch ( options.prop ) {
+                    case 'attr':
+                        result = this[i].getAttribute(options.name);
+                    break;
+                    case 'html':
+                        result = this[i].innerHTML;
+                    break;
+                    case 'parent':
+                        result = this[i].parentNode;
+                    break;
+                    case 'text':
+                        result = this[i].textContent;
+                    break;
                 }
-                return tmp;
-            } else if ( this.length === 1 ) {
-                return callback(this[0], 'get');
+                tmp.push(result);
             }
+            if ( tmp.length > 1 )
+                return tmp;
+            else
+                return tmp[0];
         }
-	}
+    }
 
 };
