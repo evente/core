@@ -20,19 +20,17 @@ Object.prototype.getProperty = function(field) {
     }
     return ref;
 }
-Object.prototype.setProperty = function(field, value, create) {
+Object.prototype.setProperty = function(field, value) {
     let ref = this;
     let path = field.split('.');
     let len = path.length;
-    create = create !== undefined ? create : true;
     for ( let i = 0; i < len - 1; i++  ) {
         if ( ref[ path[i] ] === undefined  ) {
-            if ( !create ) return;
-            ref[ path[i] ] = isNaN(parseInt(path[i+1])) ? {} : [];
+            ref[ path[i] ] = isNaN(parseInt(path[i+1], 10)) ? {} : [];
         }
         ref = ref[ path[i] ];
     }
-    if ( ref[ path[len - 1] ] === undefined && !create )
+    if ( ref[ path[len - 1] ] === undefined )
         return;
     ref[ path[len - 1] ] = value;
 }

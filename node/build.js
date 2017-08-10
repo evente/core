@@ -13,7 +13,7 @@ let inputFiles = [
     'bjs.Array.js',
     'bjs.Object.js',
     'bjs.Resource.js',
-    'bjs.Selector.js',
+    'bjs.Selector.js'
 ];
 
 watch(inputDir, { recursive: true }, function(evt, name) {

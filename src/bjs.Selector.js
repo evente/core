@@ -110,15 +110,9 @@ bjs.Selector = class Selector extends Array {
         if ( options.value !== undefined ) {
             for ( let i = 0; i < this.length; i++ ) {
                 switch ( options.prop ) {
-                    case 'attr':
-                        this[i].setAttribute(options.name, options.value);
-                    break;
-                    case 'html':
-                        this[i].innerHTML = options.value;
-                    break;
-                    case 'text':
-                        this[i].textContent = options.value;
-                    break;
+                    case 'attr':    this[i].setAttribute(options.name, options.value);  break;
+                    case 'html':    this[i].innerHTML = options.value;                  break;
+                    case 'text':    this[i].textContent = options.value;                break;
                 }
             }
             return this;
@@ -127,18 +121,10 @@ bjs.Selector = class Selector extends Array {
             let result;
             for ( let i = 0; i < this.length; i++ ) {
                 switch ( options.prop ) {
-                    case 'attr':
-                        result = this[i].getAttribute(options.name);
-                    break;
-                    case 'html':
-                        result = this[i].innerHTML;
-                    break;
-                    case 'parent':
-                        result = this[i].parentNode;
-                    break;
-                    case 'text':
-                        result = this[i].textContent;
-                    break;
+                    case 'attr':    result = this[i].getAttribute(options.name);    break;
+                    case 'html':    result = this[i].innerHTML;                     break;
+                    case 'parent':  result = this[i].parentNode;                    break;
+                    case 'text':    result = this[i].textContent;                   break;
                 }
                 tmp.push(result);
             }
