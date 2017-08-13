@@ -16,6 +16,8 @@ let babelMinifyOptions = {
 let inputDir = 'src/';
 let outputFile = 'build/bjs.min.js';
 let inputFiles = [
+    // Extensions
+    'Object.js',
     // Order has matter
     'bjs.js',
     'bjs.Model.js',

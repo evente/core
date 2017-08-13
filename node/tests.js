@@ -1,3 +1,5 @@
+const object = require('../src/Object.js');
+
 const bjs = require('../src/bjs.js');
 const bjs_model = require('../src/bjs.Model.js');
 

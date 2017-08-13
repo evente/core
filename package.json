@@ -1,5 +1,10 @@
 {
   "name": "bjs",
+  "licence": "MIT",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/apoprotsky/bjs.git"
+  },
   "scripts": {
     "build": "node node/build.js",
     "test": "jest"

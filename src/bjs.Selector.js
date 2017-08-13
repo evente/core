@@ -5,18 +5,21 @@ bjs.Selector = class Selector extends Array {
 
     constructor(options, selector) {
         super();
-        switch (options.constructor.name) {
-            case 'String':
-                bjs.Selector.prototype.push.apply(this, document.querySelectorAll(options));
+        if ( options !== undefined ) {
+            switch (options.constructor.name) {
+                case 'String':
+                    if ( options.length > 0 )
+                        bjs.Selector.prototype.push.apply(this, document.querySelectorAll(options));
                 break;
-            case 'Array':
-                bjs.Selector.prototype.push.apply(this, options);
+                case 'Array':
+                    bjs.Selector.prototype.push.apply(this, options);
                 break;
-            default:
-                if ( options instanceof Node )
-                    this.push(options);
-                else
-                    console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
+                default:
+                    if ( options instanceof Node )
+                        this.push(options);
+                    else
+                        console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
+            }
         }
         this.selector = selector;
     }
@@ -120,6 +123,8 @@ bjs.Selector = class Selector extends Array {
             }
             return this;
         }
+        if ( this.length === 0 )
+            return undefined;
         let tmp = [];
         let result;
         for ( let i = 0; i < this.length; i++ ) {
@@ -129,12 +134,10 @@ bjs.Selector = class Selector extends Array {
                 case 'parent':  result = this[i].parentNode;                    break;
                 case 'text':    result = this[i].textContent;                   break;
             }
-            tmp.push(result);
+            tmp.push(result !== null ? result : undefined );
         }
         if ( options.prop === 'parent' )
             return new bjs.Selector(tmp);
-        if ( tmp.length === 0 )
-            return undefined;
         return tmp.length > 1 ? tmp : tmp[0];
     }
 
