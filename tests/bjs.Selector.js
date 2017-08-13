@@ -1,0 +1,125 @@
+const bjs = require('../node/tests.js');
+
+document.body.innerHTML =
+    '<div class="test test1"></div>' +
+    '<div class="test test2"></div>';
+
+describe('Selector class', () => {
+
+    test('Selector object creation with selector string', () => {
+        let selector = new bjs.Selector('div');
+        expect(selector.length).toBe(2);
+    });
+
+    test('Selector object creation with wrong parameters', () => {
+        let selector = new bjs.Selector({});
+        expect(selector.length).toBe(0);
+    });
+
+});
+
+describe('DOM selectors', () => {
+
+    test('Select elements by tag', () => {
+        expect(
+            bjs('body')
+                .length
+        ).toBe(1);
+    });
+
+    test('Get parents of selected elements', () => {
+        expect(bjs('div').parent()).toBe(2);
+    });
+
+    test('Find elements inside selection', () => {
+        expect(
+            bjs('body')
+                .find('div')
+                    .length
+        ).toBe(2);
+    });
+
+});
+
+describe('Class manipulation', () => {
+
+    test('All of selected elements has class', () => {
+        expect(bjs('div').hasClass('test', true)).toBe(true);
+    });
+
+    test('Not all of selected elements has class', () => {
+        expect(bjs('div').hasClass('test1', true)).toBe(false);
+    });
+
+    test('One of selected elements has class', () => {
+        expect(bjs('div').hasClass('test1')).toBe(true);
+    });
+
+    test('Add class to elements', () => {
+        expect(
+            bjs('body')
+                .find('div')
+                    .addClass('testClass')
+                    .end()
+                .find('.testClass')
+                    .length
+        ).toBe(2);
+    });
+
+    test('Remove class from elements', () => {
+        expect(
+            bjs('body')
+                .find('div')
+                    .removeClass('testClass')
+                    .end()
+                .find('.testClass')
+                    .length
+        ).toBe(0);
+    });
+
+    test('Toggle class in selected elements', () => {
+        expect(
+            bjs('body')
+                .find('div')
+                    .toggleClass('test')
+                    .end()
+                .find('.test')
+                    .length
+        ).toBe(0);
+    });
+
+});
+
+describe('Attributes manipulation', () => {
+
+    test('Get element text', () => {
+        expect(
+            bjs('.test1')
+                .text()
+        ).toBe('');
+    });
+
+    test('Set element text', () => {
+        expect(
+            bjs('.test1')
+                .text('text')
+                .text()
+        ).toBe('text');
+    });
+
+    test('Get element html code', () => {
+        expect(
+            bjs('.test2')
+                .html()
+        ).toBe('');
+    });
+
+    test('Set element html code', () => {
+        expect(
+            bjs('.test2')
+                .html('<span>text</span>')
+                .html()
+        ).toBe('<span>text</span>');
+    });
+
+});

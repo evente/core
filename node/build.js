@@ -1,9 +1,20 @@
 let fs = require('fs');
 let watch = require('node-watch');
 let babelMinify = require('babel-minify');
+let babelMinifyOptions = {
+    dead_code: true,
+    drop_console: true,
+    global_defs: {
+        process: {
+            env: {
+                NODE_ENV: "production"
+            }
+        }
+    }
+}
 
-let inputDir = '../src/';
-let outputFile = '../build/bjs.min.js';
+let inputDir = 'src/';
+let outputFile = 'build/bjs.min.js';
 let inputFiles = [
     // Order has matter
     'bjs.js',
@@ -24,7 +35,7 @@ watch(inputDir, { recursive: true }, function(evt, name) {
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
     try {
-        let outputCode = babelMinify(inputCode);
+        let outputCode = babelMinify(inputCode, babelMinifyOptions);
         fs.writeFileSync(outputFile, outputCode);
         console.log('Rebuild done!');
     } catch (e) {

@@ -7,6 +7,9 @@ var bjs = function(selector) {
 
 var $ = bjs;
 
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    module.exports = bjs;
+
 // Object extensions
 Object.prototype.getProperty = function(field) {
     let ref = this;
@@ -30,7 +33,5 @@ Object.prototype.setProperty = function(field, value) {
         }
         ref = ref[ path[i] ];
     }
-    if ( ref[ path[len - 1] ] === undefined )
-        return;
     ref[ path[len - 1] ] = value;
 }

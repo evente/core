@@ -1,3 +1,6 @@
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    var bjs = require('./bjs.js');
+
 bjs.Model = class Model {
 
     constructor(selector, model) {

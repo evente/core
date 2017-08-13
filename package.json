@@ -1,0 +1,21 @@
+{
+  "name": "bjs",
+  "scripts": {
+    "build": "node node/build.js",
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-minify": "^0.1.12",
+    "babel-plugin-transform-inline-environment-variables": "^0.1.1",
+    "jest": "^20.0.4",
+    "node-watch": "^0.5.5"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "testMatch": [
+      "**/tests/*.js?(x)"
+    ],
+    "verbose": true
+  }
+}

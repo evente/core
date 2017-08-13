@@ -4,10 +4,14 @@ env:
     - GIT_COMMITTED_AT=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then git log -1 --pretty=format:%ct; else git log -1 --skip 1 --pretty=format:%ct; fi)
 language: node_js
 node_js:
-  - 8
+  - "node"
 addons:
   code_climate:
     repo_token: fde5ace99a6139558a65db012be99e51b6f09dc3bafde415187195ffd216d319
+install:
+  - npm install
+script:
+  - npm test
 after_success:
   - npm install -g codeclimate-test-reporter
-  - codeclimate-test-reporter < lcov.info
+  - codeclimate-test-reporter < coverage/lcov.info

@@ -1,3 +1,6 @@
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    var bjs = require('./bjs.js');
+
 bjs.Selector = class Selector extends Array {
 
     constructor(options, selector) {
@@ -116,23 +119,21 @@ bjs.Selector = class Selector extends Array {
                 }
             }
             return this;
-        } else {
-            let tmp = [];
-            let result;
-            for ( let i = 0; i < this.length; i++ ) {
-                switch ( options.prop ) {
-                    case 'attr':    result = this[i].getAttribute(options.name);    break;
-                    case 'html':    result = this[i].innerHTML;                     break;
-                    case 'parent':  result = this[i].parentNode;                    break;
-                    case 'text':    result = this[i].textContent;                   break;
-                }
-                tmp.push(result);
-            }
-            if ( tmp.length > 1 )
-                return tmp;
-            else
-                return tmp[0];
         }
+        let tmp = [];
+        let result;
+        for ( let i = 0; i < this.length; i++ ) {
+            switch ( options.prop ) {
+                case 'attr':    result = this[i].getAttribute(options.name);    break;
+                case 'html':    result = this[i].innerHTML;                     break;
+                case 'parent':  result = this[i].parentNode;                    break;
+                case 'text':    result = this[i].textContent;                   break;
+            }
+            tmp.push(result);
+        }
+        if ( tmp.length == 0 )
+            return undefined;
+        return tmp.length > 1 ? tmp : tmp[0];
     }
 
 };
