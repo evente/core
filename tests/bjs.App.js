@@ -7,7 +7,7 @@ describe('App class', () => {
 
     test('App object creation', () => {
         let app = new bjs.App('body', {text: 'text'});
-        expect(app.selector.length).toBe(1);
+        expect(app.selector).toHaveLength(1);
     });
 
 });

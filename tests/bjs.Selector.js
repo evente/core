@@ -8,12 +8,12 @@ describe('Selector class', () => {
 
     test('Selector object creation with selector string', () => {
         let selector = new bjs.Selector('div');
-        expect(selector.length).toBe(2);
+        expect(selector).toHaveLength(2);
     });
 
     test('Selector object creation with wrong parameters', () => {
         let selector = new bjs.Selector({});
-        expect(selector.length).toBe(0);
+        expect(selector).toHaveLength(0);
     });
 
 });
@@ -21,22 +21,16 @@ describe('Selector class', () => {
 describe('DOM selectors', () => {
 
     test('Select elements by tag', () => {
-        expect(
-            bjs('body')
-                .length
-        ).toBe(1);
+        expect(bjs('body')).toHaveLength(1);
     });
 
     test('Get parents of selected elements', () => {
-        expect(bjs('div').parent()).toBe(2);
+        let expected = new bjs.Selector([document.body, document.body]);
+        expect(bjs('div').parent()).toEqual(expected);
     });
 
     test('Find elements inside selection', () => {
-        expect(
-            bjs('body')
-                .find('div')
-                    .length
-        ).toBe(2);
+        expect(bjs('body').find('div')).toHaveLength(2);
     });
 
 });
@@ -62,8 +56,7 @@ describe('Class manipulation', () => {
                     .addClass('testClass')
                     .end()
                 .find('.testClass')
-                    .length
-        ).toBe(2);
+        ).toHaveLength(2);
     });
 
     test('Remove class from elements', () => {
@@ -73,8 +66,7 @@ describe('Class manipulation', () => {
                     .removeClass('testClass')
                     .end()
                 .find('.testClass')
-                    .length
-        ).toBe(0);
+        ).toHaveLength(0);
     });
 
     test('Toggle class in selected elements', () => {
@@ -84,8 +76,7 @@ describe('Class manipulation', () => {
                     .toggleClass('test')
                     .end()
                 .find('.test')
-                    .length
-        ).toBe(0);
+        ).toHaveLength(0);
     });
 
 });

@@ -131,7 +131,9 @@ bjs.Selector = class Selector extends Array {
             }
             tmp.push(result);
         }
-        if ( tmp.length == 0 )
+        if ( options.prop === 'parent' )
+            return new bjs.Selector(tmp);
+        if ( tmp.length === 0 )
             return undefined;
         return tmp.length > 1 ? tmp : tmp[0];
     }
