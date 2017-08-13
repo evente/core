@@ -1,0 +1,5 @@
+engines:
+  eslint:
+    checks:
+      global-require:
+        enabled: false
