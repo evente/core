@@ -18,7 +18,7 @@ ratings:
     - "src/*.js"
 
 exclude_paths:
-  - "LICENCE"
+  - "LICENSE"
   - "README*"
   - "package.json"
   - "build/"

@@ -1,6 +1,6 @@
 {
   "name": "bjs",
-  "licence": "MIT",
+  "license": "MIT",
   "repository": {
       "type": "git",
       "url": "https://github.com/apoprotsky/bjs.git"

@@ -7,6 +7,11 @@ describe('Object class extensions', () => {
         expect(obj.getProperty('data.id')).toBeUndefined();
     });
 
+    test('Get defined property', () => {
+        let obj = { data: [{id: undefined}, {id: 1}] };
+        expect(obj.getProperty('data.1.id')).toBe(1);
+    });
+
     test('Set object property', () => {
         let obj = { data: {} };
         obj.setProperty('data.id', 1);
