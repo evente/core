@@ -30,7 +30,7 @@ bjs.Selector = class Selector extends Array {
 
     attr(name, value) {
         return this._forEach({
-            'prop': 'attr',
+            'action': 'attr',
             'name': name,
             'value': value
         });
@@ -40,45 +40,43 @@ bjs.Selector = class Selector extends Array {
         return this.selector;
     }
 
+    find(selector) {
+        return this._forEach({
+            'action': 'find',
+            'selector': selector
+        });
+    }
+
     get(index) {
         return this[index];
     }
 
     hasClass(className, all) {
-        let tmp;
-        for ( let i = 0; i < this.length; i++ ) {
-            tmp = this[i].classList.contains(className);
-            if ( all !== true ) {
-                if ( tmp ) return true;
-            } else {
-                if ( !tmp ) return false;
-            }
-        }
-        return all === true ? true : false;
+        return this._forEach({
+            'action': 'hasClass',
+            'class': className,
+            'all': all
+        });
     }
 
     html(html) {
         return this._forEach({
-            'prop': 'html',
+            'action': 'html',
             'value': html
         });
     }
 
-    find(selector) {
-        let nodes = [];
-        let tmp;
-        for ( let i = 0; i < this.length; i++ ) {
-            tmp = this[i].querySelectorAll(selector);
-            for ( let i = 0; i < tmp.length; i++ ) {
-                nodes.push(tmp[i]);
-            }
-        }
-        return new bjs.Selector(nodes, this);
+    is(selector, all) {
+        return this._forEach({
+            'action': 'is',
+            'selector': selector,
+            'all': all
+        });
     }
 
     parent() {
         return this._forEach({
-            'prop': 'parent'
+            'action': 'parent'
         });
     }
 
@@ -88,7 +86,7 @@ bjs.Selector = class Selector extends Array {
 
     text(text) {
         return this._forEach({
-            'prop': 'text',
+            'action': 'text',
             'value': text
         });
     }
@@ -115,7 +113,7 @@ bjs.Selector = class Selector extends Array {
     _forEach(options) {
         if ( options.value !== undefined ) {
             for ( let i = 0; i < this.length; i++ ) {
-                switch ( options.prop ) {
+                switch ( options.action ) {
                     case 'attr':    this[i].setAttribute(options.name, options.value);  break;
                     case 'html':    this[i].innerHTML = options.value;                  break;
                     case 'text':    this[i].textContent = options.value;                break;
@@ -125,20 +123,50 @@ bjs.Selector = class Selector extends Array {
         }
         if ( this.length === 0 )
             return undefined;
-        let tmp = [];
-        let result;
+        let result = [];
+        let tmp;
         for ( let i = 0; i < this.length; i++ ) {
-            switch ( options.prop ) {
-                case 'attr':    result = this[i].getAttribute(options.name);    break;
-                case 'html':    result = this[i].innerHTML;                     break;
-                case 'parent':  result = this[i].parentNode;                    break;
-                case 'text':    result = this[i].textContent;                   break;
+            switch ( options.action ) {
+                case 'attr':
+                    tmp = this[i].getAttribute(options.name);
+                    result.push(tmp !== null ? tmp : undefined );
+                break;
+                case 'find':
+                    tmp = this[i].querySelectorAll(options.selector);
+                    for ( let i = 0; i < tmp.length; i++ )
+                        result.push(tmp[i]);
+                break;
+                case 'html':    result.push(this[i].innerHTML);     break;
+                case 'hasClass':
+                    tmp = this[i].classList.contains(options.class);
+                    if ( options.all !== true ) {
+                        if ( tmp ) return true;
+                    } else {
+                        if ( !tmp ) return false;
+                    }
+                break;
+                case 'is':
+                    tmp = this[i].matches(options.selector);
+                    if ( options.all !== true ) {
+                        if ( tmp ) return true;
+                    } else {
+                        if ( !tmp ) return false;
+                    }
+                break;
+                case 'parent':  result.push(this[i].parentNode);    break;
+                case 'text':    result.push(this[i].textContent);   break;
             }
-            tmp.push(result !== null ? result : undefined );
         }
-        if ( options.prop === 'parent' )
-            return new bjs.Selector(tmp);
-        return tmp.length > 1 ? tmp : tmp[0];
+        switch ( options.action ) {
+            case 'find':
+            case 'parent':
+                return new bjs.Selector(result, this);
+            case 'hasClass':
+            case 'is':
+                return options.all === true ? true : false;
+            default:
+                return result.length > 1 ? result : result[0];
+        }
     }
 
 };

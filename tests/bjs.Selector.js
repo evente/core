@@ -1,8 +1,8 @@
 const bjs = require('../node/tests.js');
 
 document.body.innerHTML =
-    '<div class="test test1"></div>' +
-    '<div class="test test2"></div>';
+    '<div id="first" class="test test1"></div>' +
+    '<div id="second" class="test test2"></div>';
 
 describe('Selector class', () => {
 
@@ -12,7 +12,7 @@ describe('Selector class', () => {
     });
 
     test('Create Selector object with empty string', () => {
-        let selector = new bjs.Selector();
+        let selector = new bjs.Selector('');
         expect(selector).toHaveLength(0);
     });
 
@@ -40,8 +40,9 @@ describe('DOM selectors', () => {
     });
 
     test('Get parents of selected elements', () => {
-        let expected = new bjs.Selector([document.body, document.body]);
-        expect(bjs('div').parent()).toEqual(expected);
+        let divs = bjs('div');
+        let expected = new bjs.Selector([document.body, document.body], divs);
+        expect(divs.parent()).toEqual(expected);
     });
 
     test('Get parents of empty selection', () => {
@@ -50,6 +51,19 @@ describe('DOM selectors', () => {
 
     test('Find elements inside selection', () => {
         expect(bjs('body').find('div')).toHaveLength(2);
+    });
+
+    test('All of selected elements matches selector', () => {
+        expect(bjs('div').is('.test')).toBe(true);
+    });
+
+    test('Not all of selected elements matches selector', () => {
+        expect(bjs('div').is('.test1', true)).toBe(false);
+    });
+
+    test('One of selected elements matches selector', () => {
+        expect(bjs('div').is('#first')).toBe(true);
+        expect(bjs('div').is('.test#second')).toBe(true);
     });
 
 });

@@ -6,7 +6,7 @@ describe('App class', () => {
         '<div data-model="text"></div>';
 
     test('App object creation', () => {
-        let app = new bjs.App('body', {text: 'text'});
+        let app = new bjs.App('body');
         expect(app.selector).toHaveLength(1);
     });
 
