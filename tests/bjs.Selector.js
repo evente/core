@@ -2,7 +2,8 @@ const bjs = require('../node/tests.js');
 
 document.body.innerHTML =
     '<div id="first" class="test test1"></div>' +
-    '<div id="second" class="test test2"></div>';
+    '<div id="second" class="test test2"></div>' +
+    '<input>';
 
 describe('Selector class', () => {
 
@@ -19,6 +20,11 @@ describe('Selector class', () => {
     test('Create Selector object with selector string', () => {
         let selector = new bjs.Selector('div');
         expect(selector).toHaveLength(2);
+    });
+
+    test('Create Selector object with HTMLElement', () => {
+        let selector = new bjs.Selector(document.body);
+        expect(selector).toHaveLength(1);
     });
 
     test('Create Selector object with wrong parameters', () => {
@@ -156,6 +162,22 @@ describe('Attributes manipulation', () => {
                 .attr('data-model', 'text')
                 .attr('data-model')
         ).toBe('text');
+    });
+
+    test('Get value of HTMLInputElement', () => {
+        expect(bjs('input').val()).toBe('');
+    });
+
+    test('Get value of non HTMLInputElement', () => {
+        expect(bjs('.test1').val()).toBeUndefined();
+    });
+
+    test('Set value of HTMLInputElement', () => {
+        expect(bjs('input').val('text').val()).toBe('text');
+    });
+
+    test('Set value of non HTMLInputElement', () => {
+        expect(bjs('.test1').val('text').val()).toBeUndefined();
     });
 
 });

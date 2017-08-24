@@ -15,7 +15,7 @@ bjs.Selector = class Selector extends Array {
                     bjs.Selector.prototype.push.apply(this, options);
                 break;
                 default:
-                    if ( options instanceof Node )
+                    if ( options instanceof HTMLElement )
                         this.push(options);
                     else
                         console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
@@ -95,6 +95,13 @@ bjs.Selector = class Selector extends Array {
         return this._class('toggle', classes);
     }
 
+    val(value) {
+        return this._forEach({
+            'action': 'val',
+            'value': value
+        });
+    }
+
     _class(action, classes, active) {
         if ( typeof classes === 'string' )
             classes = classes.split(' ');
@@ -117,6 +124,10 @@ bjs.Selector = class Selector extends Array {
                     case 'attr':    this[i].setAttribute(options.name, options.value);  break;
                     case 'html':    this[i].innerHTML = options.value;                  break;
                     case 'text':    this[i].textContent = options.value;                break;
+                    case 'val':
+                        if ( this[i] instanceof HTMLInputElement )
+                            this[i].value = options.value;
+                    break;
                 }
             }
             return this;
@@ -155,6 +166,9 @@ bjs.Selector = class Selector extends Array {
                 break;
                 case 'parent':  result.push(this[i].parentNode);    break;
                 case 'text':    result.push(this[i].textContent);   break;
+                case 'val':
+                    result.push(this[i] instanceof HTMLInputElement ? this[i].value : undefined);
+                break;
             }
         }
         switch ( options.action ) {

@@ -6,14 +6,15 @@
     </head>
     <body id="app" class="body">
         <div id="header" class="test test1" data-model="header"></div>
-        <div id="content" class="test test2" data-model="content"></div>
+        <div id="content" class="test test2">
+            <input data-model="data.1.id">
+            <p data-model="data.1.id"></p>
+        </div>
         <div id="footer" class="test test3" data-model="footer"></div>
-        <div data-model="data.1.id"></div>
         <script src="../build/bjs.min.js"></script>
         <script>
             let app = new bjs.App('body', {
                 header: 'header',
-                content: 'content',
                 footer: 'footer',
                 data: [
                     { id: 0 },

@@ -4,7 +4,7 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 bjs.App = class App extends bjs.Model {
 
     constructor(selector, model) {
-        super(selector, model);
+        return super(selector, model);
     }
 
 };
