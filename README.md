@@ -5,4 +5,4 @@
 
 # bjs
 
-JavaScript library designed to replace jQuery and AngularJS in small web applications
+JavaScript library for small web applications with some features of jQuery and AngularJS
