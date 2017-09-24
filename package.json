@@ -2,13 +2,13 @@
   "name": "bjs",
   "license": "MIT",
   "repository": {
-      "type": "git",
-      "url": "https://github.com/apoprotsky/bjs.git"
+    "type": "git",
+    "url": "https://github.com/apoprotsky/bjs.git"
   },
   "scripts": {
     "build": "node node/build.js",
-    "test": "jest",
-    "watch": "node node/watch.js"
+    "start": "node node/server.js",
+    "test": "jest"
   },
   "dependencies": {},
   "devDependencies": {

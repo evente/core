@@ -23,6 +23,7 @@ let inputFiles = [
     // Order has no matter - ordered by name
     'bjs.App.js',
     'bjs.Array.js',
+    'bjs.Fetch.js',
     'bjs.Object.js',
     'bjs.Resource.js',
     'bjs.Selector.js'
