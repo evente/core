@@ -87,7 +87,7 @@ bjs.Model = class Model {
                 elements[i] instanceof HTMLInputElement ||
                 elements[i] instanceof HTMLButtonElement ||
                 elements[i] instanceof HTMLTextAreaElement ||
-                elements[i] instanceof HTMLSelectElement ||
+                elements[i] instanceof HTMLSelectElement
             ) {
                 elements[i].value = value;
                 elements[i].bjs_model = this;
