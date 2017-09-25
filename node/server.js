@@ -8,7 +8,8 @@ const hostname = '127.0.0.1';
 const port = 3000;
 const watchDir = 'src/';
 const htmlDir = 'html/';
-const jsDir = 'src/';
+const srcDir = 'src/';
+const buildDir = 'build/';
 
 console.log('Watching ' + watchDir + ' for changes...');
 watch(watchDir, { recursive: true }, function(evt, name) {
@@ -21,8 +22,9 @@ http.createServer((req, res) => {
     let file = path.basename(req.url) || 'dev.html';
     let source;
     switch ( dir ) {
-        case '/src':    source = jsDir + file;      break;
-        default:        source = htmlDir + file;    break;
+        case '/src':   source = srcDir + file;   break;
+        case '/build': source = buildDir + file; break;
+        default:       source = htmlDir + file;  break;
     }
     fs.readFile(source, function(err, contents) {
         if ( !err ) {

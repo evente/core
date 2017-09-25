@@ -4,22 +4,24 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
         <title>bjs</title>
     </head>
-    <body id="app" class="body">
-        <div id="header" class="test test1" data-model="header"></div>
-        <div id="content" class="test test2">
-            <input data-model="data.1.id">
-            <p data-model="data.1.id"></p>
+    <body>
+        <div data-model="header"></div>
+        <div data-model-base="items" data-model-value="item_id">
+            <label>id</label>   <span data-field="id"></span>           <br>
+            <label>name</label> <input data-field="name">               <br>
+            <label>desc</label> <textarea data-field="desc"></textarea> <br>
         </div>
-        <div id="footer" class="test test3" data-model="footer"></div>
+        <div data-model="footer"></div>
         <script src="../build/bjs.min.js"></script>
         <script>
             let app = new bjs.App('body', {
                 header: 'header',
                 footer: 'footer',
-                data: [
-                    { id: 0 },
-                    { id: 1 },
-                    { id: 2 },
+                item_id: 1,
+                items: [
+                    { id: 0, name: 'zero' },
+                    { id: 1, name: 'one' },
+                    { id: 2, name: 'two' },
                 ],
             });
         </script>

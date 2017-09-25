@@ -12,9 +12,9 @@ bjs.Model = class Model {
                 if ( target[prop] === undefined )
                     return;
                 if ( target[prop].constructor.name !== 'Proxy' && typeof target[prop] === 'object' ) {
-                    let path = model.path.get(target);
-                    path = ( path !== undefined ? path + '.' : '' ) + prop;
-                    model.path.set(target[prop], path);
+                    let property = model.map.get(target);
+                    property = ( property !== undefined ? property + '.' : '' ) + prop;
+                    model.map.set(target[prop], property);
                     target[prop] = new Proxy(target[prop], model.proxyHandler);
                 }
                 return target[prop];
@@ -23,14 +23,14 @@ bjs.Model = class Model {
                 let oldval = target[prop];
                 target[prop] = value;
                 if ( oldval !== value ) {
-                    let path = model.path.get(target);
-                    path = ( path !== undefined ? path + '.' : '' ) + prop;
-                    model._apply(path);
+                    let property = model.map.get(target);
+                    property = ( property !== undefined ? property + '.' : '' ) + prop;
+                    model._apply(property);
                 }
             }
         }
         this.data = new Proxy(data || {}, this.proxyHandler);
-        this.path = new WeakMap();
+        this.map = new WeakMap();
         this.selector = new bjs.Selector(selector);
         this._init();
         this._apply();
@@ -41,7 +41,7 @@ bjs.Model = class Model {
     }
 
     set(property, value) {
-        return this.data.setProperty(property, value);
+        this.data.setProperty(property, value);
     }
 
     _init() {
@@ -53,13 +53,42 @@ bjs.Model = class Model {
         }
     }
 
-    _apply(path) {
-        let selector = '[data-model' + ( path !== undefined ? '^="' + path + '"' : '' ) + ']';
-        let elements = this.selector.find(selector);
-        let value;
+    _apply(property, simple) {
+        let selector, elements, value;
+        // data-model-base + data-model-value|key
+        if ( simple === undefined ) {
+            selector = '[data-model-base], ' +
+                       '[data-model-value' + ( property !== undefined ? '="' + property + '"' : '' ) + ']';
+            elements = this.selector.find(selector);
+            for ( let i = 0; i < elements.length; i++ ) {
+                let tmp = elements[i].getAttribute('data-model-base');
+                if ( tmp !== null ) value = tmp + '.';
+                tmp = elements[i].getAttribute('data-model-value');
+                if ( tmp !== null ) {
+                    value += this.get(tmp) + '.';
+                } else {
+                    tmp = elements[i].getAttribute('data-model-key');
+                    if ( tmp !== null ) value += tmp + '.';
+                }
+                let fields = elements.find('[data-field]');
+                for ( let i = 0; i < fields.length; i++ )
+                    fields[i].setAttribute('data-model', value + fields[i].getAttribute('data-field'));
+                if ( property !== undefined )
+                    this._apply(value, 1);
+            }
+        }
+        // data-model
+        selector = '[data-model' + ( property !== undefined ? '^="' + property + '"' : '' ) + ']';
+        elements = this.selector.find(selector);
         for ( let i = 0; i < elements.length; i++ ) {
             value = this.data.getProperty(elements[i].getAttribute('data-model'));
-            if ( elements[i] instanceof HTMLInputElement ) {
+            if ( value === undefined ) value = '';
+            if (
+                elements[i] instanceof HTMLInputElement ||
+                elements[i] instanceof HTMLButtonElement ||
+                elements[i] instanceof HTMLTextAreaElement ||
+                elements[i] instanceof HTMLSelectElement ||
+            ) {
                 elements[i].value = value;
                 elements[i].bjs_model = this;
             } else
@@ -70,16 +99,20 @@ bjs.Model = class Model {
 }
 
 bjs.Model.eventHander = function(event) {
-    if ( !(event.target instanceof HTMLInputElement) )
+    if (
+        !(event.target instanceof HTMLInputElement) &&
+        !(event.target instanceof HTMLButtonElement ) &&
+        !(event.target instanceof HTMLTextAreaElement) &&
+        !(event.target instanceof HTMLSelectElement)
+    )
         return;
     let model = event.target.bjs_model;
-    let path = event.target.getAttribute('data-model');
-    if ( model === undefined || path === null )
+    let property = event.target.getAttribute('data-model');
+    if ( model === undefined || property === null )
         return;
-    let value_old = model.data.getProperty(path);
+    let value_old = model.get(property);
     let value_new = event.target.value;
-    if ( value_old == value_new )
+    if ( value_old === value_new )
         return;
-    model.data.setProperty(path, value_new);
-    model._apply(path);
+    model.set(property, value_new);
 }
