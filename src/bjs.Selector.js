@@ -21,6 +21,7 @@ bjs.Selector = class Selector extends Array {
                         console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
             }
         }
+		Object.defineProperty(this, 'selector', { enumerable: false, writable: true });
         this.selector = selector;
     }
 
@@ -105,8 +106,8 @@ bjs.Selector = class Selector extends Array {
     _class(action, classes, active) {
         if ( typeof classes === 'string' )
             classes = classes.split(' ');
-        for ( let i = 0; i < this.length; i++ ) {
-            for ( let j = 0; j < classes.length; j++ ) {
+        for ( let i in this ) {
+            for ( let j in classes ) {
                 if ( action === 'toggle' ) {
                     this[i].classList.toggle(classes[j], active);
                 } else {
@@ -119,7 +120,7 @@ bjs.Selector = class Selector extends Array {
 
     _forEach(options) {
         if ( options.value !== undefined ) {
-            for ( let i = 0; i < this.length; i++ ) {
+            for ( let i in this ) {
                 switch ( options.action ) {
                     case 'attr':    this[i].setAttribute(options.name, options.value);  break;
                     case 'html':    this[i].innerHTML = options.value;                  break;
@@ -136,16 +137,14 @@ bjs.Selector = class Selector extends Array {
             return undefined;
         let result = [];
         let tmp;
-        for ( let i = 0; i < this.length; i++ ) {
+        for ( let i in this ) {
             switch ( options.action ) {
                 case 'attr':
                     tmp = this[i].getAttribute(options.name);
                     result.push(tmp !== null ? tmp : undefined );
                 break;
                 case 'find':
-                    tmp = this[i].querySelectorAll(options.selector);
-                    for ( let i = 0; i < tmp.length; i++ )
-                        result.push(tmp[i]);
+					Array.prototype.push.apply(result, this[i].querySelectorAll(options.selector));
                 break;
                 case 'html':    result.push(this[i].innerHTML);     break;
                 case 'hasClass':
