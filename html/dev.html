@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <title>bjs</title>
     </head>
     <body>
         <div b-model="items"></div>
-		<div>
-			<label>Active</label>
-			<select b-for="items" b-key="id" b-model="item_id">
-				<option b-field="name"></option>
-			</select>
-		</div>
+        <div>
+            <label>Active</label>
+            <select b-for="items" b-key="id" b-model="item_id">
+                <option b-field="name"></option>
+            </select>
+        </div>
         <div b-base="items" b-value="item_id">
             <label>id</label>   <span b-field="id"></span>           <br>
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
         </div>
-		<div b-for="items" b-key="id">
-			<p>
-				id: <span b-field="id"></span>
-				name: <span b-field="name"></span>
-				desc: <span b-field="desc"></span>
-			</p>
-		</div>
+        <div b-for="items" b-key="id">
+            <p>
+                id: <span b-field="id"></span>
+                name: <span b-field="name"></span>
+                desc: <span b-field="desc"></span>
+            </p>
+        </div>
         <div b-model="footer"></div>
         <!-- jQuery -->
         <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->

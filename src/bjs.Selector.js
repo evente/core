@@ -21,7 +21,7 @@ bjs.Selector = class Selector extends Array {
                         console.warn('Selector: Unknown constructor name - ' + options.constructor.name + '!');
             }
         }
-		Object.defineProperty(this, 'selector', { enumerable: false, writable: true });
+        Object.defineProperty(this, 'selector', { enumerable: false, writable: true });
         this.selector = selector;
     }
 
@@ -144,7 +144,7 @@ bjs.Selector = class Selector extends Array {
                     result.push(tmp !== null ? tmp : undefined );
                 break;
                 case 'find':
-					Array.prototype.push.apply(result, this[i].querySelectorAll(options.selector));
+                    Array.prototype.push.apply(result, this[i].querySelectorAll(options.selector));
                 break;
                 case 'html':    result.push(this[i].innerHTML);     break;
                 case 'hasClass':
