@@ -22,7 +22,8 @@ let inputFiles = [
     'bjs.Model.js',
     // Order has no matter - ordered by name
     'bjs.App.js',
-    'bjs.Fetch.js',
+    //'bjs.Fetch.js',
+    'bjs.ModelProxyHandler.js',
     'bjs.Selector.js'
 ];
 

@@ -3,9 +3,9 @@ const bjs = require('../node/tests.js');
 describe('Model class', () => {
 
     document.body.innerHTML =
-        '<div id="for" b-for="items" b-key="id">' +
-        '    <p b-field="name"></p>' +
-        '</div>' +
+        '<select id="for" b-for="items" b-as="item" b-key="id">' +
+        '    <option b-field="name" value="{{item.id}}"></option>' +
+        '</select>' +
         '<input id="model" b-model="form.text">';
 
     test('Model object creation', () => {

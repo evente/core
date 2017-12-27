@@ -37,6 +37,13 @@ bjs.Selector = class Selector extends Array {
         });
     }
 
+    contains(node) {
+        return this._forEach({
+            'action': 'contains',
+            'node': node
+        });
+    }
+
     end() {
         return this.selector;
     }
@@ -135,13 +142,16 @@ bjs.Selector = class Selector extends Array {
         }
         if ( this.length === 0 )
             return undefined;
-        let result = [];
-        let tmp;
-        for ( let i in this ) {
+        let i, tmp, result = [];
+        for ( i in this ) {
             switch ( options.action ) {
                 case 'attr':
                     tmp = this[i].getAttribute(options.name);
                     result.push(tmp !== null ? tmp : undefined );
+                break;
+                case 'contains':
+                    if ( this[i] === options.node || this[i].contains(options.node) )
+                        return true;
                 break;
                 case 'find':
                     Array.prototype.push.apply(result, this[i].querySelectorAll(options.selector));
@@ -171,6 +181,8 @@ bjs.Selector = class Selector extends Array {
             }
         }
         switch ( options.action ) {
+            case 'contains':
+                return false;
             case 'find':
             case 'parent':
                 return new bjs.Selector(result, this);

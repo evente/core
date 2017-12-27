@@ -5,58 +5,14 @@ bjs.Model = class Model {
 
     constructor(selector, data) {
         let model = this;
-        this.proxyHandler = {
-            get: function(target, prop) {
-                if ( prop === 'constructor' )
-                    return { name: 'Proxy' };
-                if ( target[prop] === undefined ) {
-                    if ( prop === 'length'  )
-                        return Object.keys(target).length;
-                    return;
-                }
-                if ( target[prop] !== null && target[prop].constructor.name !== 'Proxy' && typeof target[prop] === 'object' ) {
-                    let property = model.paths.get(target);
-                    property = ( property !== undefined ? property + '.' : '' ) + prop;
-                    model.paths.set(target[prop], property);
-                    target[prop] = new Proxy(target[prop], model.proxyHandler);
-                }
-                return target[prop];
-            },
-            set: function(target, prop, value, receiver) {
-                let oldval = target[prop];
-                target[prop] = value;
-                if ( oldval !== value ) {
-                    let property = model.paths.get(target);
-                    property = ( property !== undefined ? property + '.' : '' ) + prop;
-                    let elements = model._get_elements(property);
-                    elements.forEach(function(element) {
-                        model._parse(element, property);
-                    });
-                }
-                return true;
-            },
-            deleteProperty: function(target, prop) {
-                delete target[prop];
-                let property = model.paths.get(target);
-                property = ( property !== undefined ? property + '.' : '' ) + prop;
-                let elements = model._get_elements(property);
-                elements.forEach(function(element) {
-                    if ( element._b_for !== undefined && element._b_for === property ) {
-                        model._unlink(element, property);
-                        element.remove();
-                        return;
-                    }
-                    model._parse(element, property);
-                });
-                return true;
-            }
-        }
+        bjs.models.push(this);
+        this.proxyHandler = new bjs.ModelProxyHandler(this);
         this.data = new Proxy(data || {}, this.proxyHandler);
         this.paths = new WeakMap();
         this.links = {};
         this.selector = new bjs.Selector(selector);
+        this.regexp = /{{.*?}}/sg;
         this._init();
-        this._parse();
     }
 
     get(property) {
@@ -68,11 +24,30 @@ bjs.Model = class Model {
     }
 
     _init() {
-        let element;
-        for ( let i in this.selector ) {
+        let i, element;
+        for ( i in this.selector ) {
             element = this.selector.get(i);
             element.addEventListener('change', bjs.Model.eventHander, true);
             element.addEventListener('keyup', bjs.Model.eventHander, true);
+            this._parse_node(element);
+        }
+    }
+
+    _apply_attributes(node) {
+        if ( node._b_attributes === undefined )
+            return;
+        let i, j, parts, part, value;
+        for ( i in node._b_attributes ) {
+            value = '';
+            parts = node._b_attributes[i];
+            for ( j in parts ) {
+                part = parts[j];
+                switch (part.type) {
+                    case 'string': value += part.value;           break;
+                    case 'value':  value += this.get(part.value); break;
+                }
+            }
+            node.setAttribute(i, value);
         }
     }
 
@@ -88,42 +63,69 @@ bjs.Model = class Model {
         return elements;
     }
 
-    _parse(element, changed) {
-        if ( element !== undefined ) {
-            if ( element.hasAttribute('b-for') )
-                this._parse_for(element, changed);
-            if ( element.hasAttribute('b-base') )
-                this._parse_base(element, changed);
-            if ( element.hasAttribute('b-model') )
-                this._parse_model(element);
-        } else {
-            let selector, elements;
-            // for + key
-            selector = '[b-for][b-key]';
-            elements = this.selector.find(selector);
-            for ( let i in elements )
-                this._parse_for(elements[i]);
-            // base, base + key, base + value
-            selector = '[b-base], [b-base][b-key], [b-base][b-value]';
-            elements = this.selector.find(selector);
-            for ( let i in elements )
-                this._parse_base(elements[i]);
-            // model
-            selector = '[b-model]';
-            elements = this.selector.find(selector);
-            for ( let i in elements )
-                this._parse_model(elements[i]);
+    _parse_attributes(node) {
+        let attribute, attributes = node.attributes, parts, pos, property, regexp;
+        for ( let i = 0; i < attributes.length; i++ ) {
+            attribute = attributes[i];
+            parts = [];
+            pos = 0;
+            regexp = this.regexp.exec(attribute.value);
+            while ( regexp ) {
+                if ( regexp.index !== pos ) {
+                    parts.push({ 'type': 'string', 'value': attribute.value.substr(pos, regexp.index - pos) });
+                    pos = regexp.index;
+                }
+                property = regexp[0].substr(2, regexp[0].length - 4).trim();
+                this._link(node, property);
+                parts.push({ 'type': 'value', 'value': property });
+                pos += regexp[0].length;
+                regexp = this.regexp.exec(attribute.value);
+            }
+            if ( pos < attribute.value.length )
+                parts.push({ 'type': 'string', 'value': attribute.value.substr(pos) });
+            if ( parts.length ) {
+                if ( node._b_attributes === undefined )
+                    node._b_attributes = {};
+                node._b_attributes[attribute.name] = parts;
+                this._apply_attributes(node);
+            }
         }
     }
 
+    _parse_node(node, property) {
+        if ( property )
+            this._apply_attributes(node, property);
+        else
+            this._parse_attributes(node);
+        if ( node.hasAttribute('b-for') )
+            this._parse_for(node, property);
+        if ( node.hasAttribute('b-base') )
+            this._parse_base(node, property);
+        let i, tmp, nodes = node.childNodes;
+        for ( i = 0; i < nodes.length; i++ ) {
+            tmp = nodes[i];
+            if (
+                tmp instanceof Text ||
+                tmp instanceof Comment ||
+                tmp instanceof HTMLBRElement ||
+                tmp instanceof HTMLScriptElement
+            )
+                continue;
+            this._parse_node(tmp);
+        }
+        if ( node.hasAttribute('b-model') )
+            this._parse_model(node, property);
+    }
+
     _parse_for(element, changed) {
-        let property, key, items, value, child;
+        let property, key, as, items, value, child;
         if ( element._b_template === undefined ) {
             element._b_template = element.children[0];
             element._b_template.remove();
         }
         property = element.getAttribute('b-for');
         this._link(element, property);
+        as = element.getAttribute('b-as') || '_';
         key = element.getAttribute('b-key');
         items = this.data.getProperty(property);
         for ( let i in items ) {
@@ -136,6 +138,7 @@ bjs.Model = class Model {
                 child.setAttribute('b-base', property);
                 child.setAttribute('b-key', value);
                 child._b_for = property + '.' + value;
+                this._replace_local(child, as, child._b_for);
                 element.appendChild(child);
             }
             if ( changed )
@@ -223,9 +226,7 @@ bjs.Model = class Model {
         if ( element._b_links === undefined )
             element._b_links = new Set();
         element._b_links.add(property);
-        if ( !element.hasAttribute('b-linked') )
-            element.setAttribute('b-linked', '');
-        if ( element._b_model != this )
+        if ( element._b_model !== this )
             element._b_model = this;
     }
 
@@ -244,10 +245,34 @@ bjs.Model = class Model {
             if ( element._b_links !== undefined ) {
                 element._b_links.delete(property);
                 if ( element._b_links.size === 0 ) {
-                    element.removeAttribute('b-linked');
                     delete element._b_model;
                 }
             }
+        }
+    }
+
+    _replace_local(node, local, base) {
+        // /(?<={{[ .|:0-9a-z]*)item\.(?=[ .|:0-9a-z]+}})/gi
+        let i, nodes, tmp, attribute,
+            attributes = node.attributes,
+            symbols = ' \\t\\r\\n.+\\-*/<>=[\\]\'"`|:_0-9a-z';
+        let regexp = new RegExp('(?<={{[' + symbols + ']*)' + local + '\.(?=[' + symbols + ']+}})', 'gim');
+        for ( i = 0; i < attributes.length; i++ ) {
+            attribute = attributes[i];
+            if ( attribute.value.match(regexp) )
+                node.setAttribute(attribute.name, attribute.value.replace(regexp, base + '.'));
+        }
+        nodes = node.childNodes;
+        for ( i = 0; i < nodes.length; i++ ) {
+            tmp = nodes[i];
+            if (
+                tmp instanceof Text ||
+                tmp instanceof Comment ||
+                tmp instanceof HTMLBRElement ||
+                tmp instanceof HTMLScriptElement
+            )
+                continue;
+            this._replace_local(tmp, local, base);
         }
     }
 
