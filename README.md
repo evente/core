@@ -5,4 +5,4 @@
 
 # bjs
 
-JavaScript library for small web applications with some features of jQuery and AngularJS
+JavaScript library for web applications with some features of jQuery and AngularJS

@@ -11,7 +11,7 @@ bjs.Model = class Model {
         this.paths = new WeakMap();
         this.links = {};
         this.selector = new bjs.Selector(selector);
-        this.regexp = /{{.*?}}/sg;
+        this.regexp = /{{.*?}}/gm;
         this._init();
     }
 
@@ -81,7 +81,7 @@ bjs.Model = class Model {
                 pos += regexp[0].length;
                 regexp = this.regexp.exec(attribute.value);
             }
-            if ( pos < attribute.value.length )
+            if ( pos && pos < attribute.value.length )
                 parts.push({ 'type': 'string', 'value': attribute.value.substr(pos) });
             if ( parts.length ) {
                 if ( node._b_attributes === undefined )
@@ -132,12 +132,12 @@ bjs.Model = class Model {
             value = items[i][key];
             if ( changed && changed != property && !changed.startsWith(property + '.' + value) )
                 continue;
-            child = element.querySelector('[b-key="' + value + '"]');
+            child = element.querySelector('[b-base="' + property + '.' + value + '"]');
             if ( !child ) {
                 child = element._b_template.cloneNode(true);
-                child.setAttribute('b-base', property);
-                child.setAttribute('b-key', value);
                 child._b_for = property + '.' + value;
+                child._b_key = value;
+                child.setAttribute('b-base', child._b_for);
                 this._replace_local(child, as, child._b_for);
                 element.appendChild(child);
             }
@@ -147,7 +147,7 @@ bjs.Model = class Model {
         if ( changed && changed === property ) {
             for ( let i = 0; i < element.children.length; i++ ) {
                 child = element.children[i];
-                key = child.getAttribute('b-key');
+                key = child._b_key || '';
                 if ( items[key] === undefined && child._b_for !== undefined && child._b_for === property + '.' + key )
                     child.remove();
             }
@@ -158,14 +158,7 @@ bjs.Model = class Model {
         let base, key, value, property, clear = false, tmp, items, item;
         base = property = element.getAttribute('b-base');
         this._link(element, property);
-        key = element.getAttribute('b-key');
-        if ( key !== null ) {
-            property += '.' + key;
-            this._link(element, property);
-            if ( this.get(property) === undefined )
-                property = '';
-        }
-        value = element.getAttribute('b-value');
+        value = element.getAttribute('b-key');
         if ( value !== null ) {
             this._link(element, value);
             tmp = this.get(value);
@@ -252,15 +245,13 @@ bjs.Model = class Model {
     }
 
     _replace_local(node, local, base) {
-        // /(?<={{[ .|:0-9a-z]*)item\.(?=[ .|:0-9a-z]+}})/gi
         let i, nodes, tmp, attribute,
             attributes = node.attributes,
-            symbols = ' \\t\\r\\n.+\\-*/<>=[\\]\'"`|:_0-9a-z';
-        let regexp = new RegExp('(?<={{[' + symbols + ']*)' + local + '\.(?=[' + symbols + ']+}})', 'gim');
+            regexp = new RegExp('(.*{{.*)' + local.replace('.', '\.') + '\.(.*}}.*)', 'gim');
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
             if ( attribute.value.match(regexp) )
-                node.setAttribute(attribute.name, attribute.value.replace(regexp, base + '.'));
+                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base + '.$2'));
         }
         nodes = node.childNodes;
         for ( i = 0; i < nodes.length; i++ ) {

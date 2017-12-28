@@ -14,7 +14,7 @@
             </select>
             <input type="number" b-model="item_id">
         </div>
-        <div b-base="items" b-value="item_id">
+        <div b-base="items" b-key="item_id">
             <label>id</label>   <span b-field="id"></span>           <br>
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
@@ -41,8 +41,6 @@
         <script src="../src/bjs.Selector.js"></script>
         <script>
             let app = new bjs.App('body', {
-                header: 'header',
-                footer: 'footer',
                 item_id: 1,
                 items: {
                     0: { id: 0, name: 'zero' },
