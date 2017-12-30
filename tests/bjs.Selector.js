@@ -1,9 +1,10 @@
 const bjs = require('../node/tests.js');
 
 document.body.innerHTML =
-    '<div id="first" class="test test1"></div>' +
-    '<div id="second" class="test test2"></div>' +
-    '<input>';
+    '<div id="first" class="test test1">' +
+    '<input>' +
+    '</div>' +
+    '<div id="second" class="test test2"></div>';
 
 describe('Selector class', () => {
 
@@ -134,14 +135,14 @@ describe('Attributes manipulation', () => {
 
     test('Set element text', () => {
         expect(
-            bjs('.test1')
+            bjs('.test2')
                 .text('text')
                 .text()
         ).toBe('text');
     });
 
     test('Get element html code', () => {
-        expect(bjs('.test2').html()).toBe('');
+        expect(bjs('.test1').html()).toBe('<input>');
     });
 
     test('Set element html code', () => {
@@ -178,6 +179,16 @@ describe('Attributes manipulation', () => {
 
     test('Set value of non HTMLInputElement', () => {
         expect(bjs('.test1').val('text').val()).toBeUndefined();
+    });
+
+});
+
+describe('Utilites', () => {
+
+    test('Node containing', () => {
+        let node = bjs('input')[0];
+        expect(bjs('.test1').contains(node)).toBe(true);
+        expect(bjs('.test2').contains(node)).toBe(false);
     });
 
 });

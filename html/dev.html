@@ -5,21 +5,21 @@
         <title>bjs</title>
     </head>
     <body>
-        <div style="font-size: 1.{{item_id}}em;">Test</div>
-        <div b-model="items"></div>
+        <h1 b-model="items"></h1>
         <div>
-            <label>Active</label>
+            <label>Current item id</label>
             <select b-for="items" b-as="item" b-key="id" b-model="item_id">
-                <option b-field="name" value="{{item.id}}"></option>
+                <option value="{{item.id}}">{{item.name}} ({{item.id}})</option>
             </select>
-            <input type="number" b-model="item_id">
+            <input type="number" b-model="item_id" min="0" max="{{items.length}}">
         </div>
         <div b-base="items" b-key="item_id">
             <label>id</label>   <span b-field="id"></span>           <br>
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
         </div>
-        <div b-for="items" b-as="item" b-key="id">
+        <h2>Items count: {{items.length}}</h1>
+        <div style="font-size: 1.{{item_id}}em;" b-for="items" b-as="item" b-key="id">
             <p>
                 id: <span b-field="id"></span>
                 name: <span b-field="name"></span>
@@ -46,7 +46,6 @@
                 items: {
                     0: { id: 0, name: 'zero' },
                     1: { id: 1, name: 'one' },
-                    2: { id: 2, name: 'two' },
                 },
             });
         </script>

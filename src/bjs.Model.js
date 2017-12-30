@@ -11,7 +11,6 @@ bjs.Model = class Model {
         this.paths = new WeakMap();
         this.links = {};
         this.selector = new bjs.Selector(selector);
-        this.regexp = /{{.*?}}/gm;
         this._init();
     }
 
@@ -36,19 +35,12 @@ bjs.Model = class Model {
     _apply_attributes(node) {
         if ( node._b_attributes === undefined )
             return;
-        let i, j, parts, part, value;
-        for ( i in node._b_attributes ) {
-            value = '';
-            parts = node._b_attributes[i];
-            for ( j in parts ) {
-                part = parts[j];
-                switch (part.type) {
-                    case 'string': value += part.value;           break;
-                    case 'value':  value += this.get(part.value); break;
-                }
-            }
-            node.setAttribute(i, value);
+        if ( node instanceof Text ) {
+            node.nodeValue = node._b_attributes.eval(this);
+            return;
         }
+        for ( let i in node._b_attributes )
+            node.setAttribute(i, node._b_attributes[i].eval(this));
     }
 
     _get_elements(link) {
@@ -64,29 +56,26 @@ bjs.Model = class Model {
     }
 
     _parse_attributes(node) {
-        let attribute, attributes = node.attributes, parts, pos, property, regexp;
-        for ( let i = 0; i < attributes.length; i++ ) {
-            attribute = attributes[i];
-            parts = [];
-            pos = 0;
-            regexp = this.regexp.exec(attribute.value);
-            while ( regexp ) {
-                if ( regexp.index !== pos ) {
-                    parts.push({ 'type': 'string', 'value': attribute.value.substr(pos, regexp.index - pos) });
-                    pos = regexp.index;
-                }
-                property = regexp[0].substr(2, regexp[0].length - 4).trim();
-                this._link(node, property);
-                parts.push({ 'type': 'value', 'value': property });
-                pos += regexp[0].length;
-                regexp = this.regexp.exec(attribute.value);
+        if ( node instanceof Text ) {
+            if ( node.nodeValue.indexOf('{{') !== -1 ) {
+                node._b_attributes = new bjs.Expression(node.nodeValue);
+                let i, links = node._b_attributes.getLinks();
+                for ( i in links )
+                    this._link(node, links[i]);
+                this._apply_attributes(node);
             }
-            if ( pos && pos < attribute.value.length )
-                parts.push({ 'type': 'string', 'value': attribute.value.substr(pos) });
-            if ( parts.length ) {
+            return;
+        }
+        let i, attribute, attributes = node.attributes;
+        for ( i = 0; i < attributes.length; i++ ) {
+            attribute = attributes[i];
+            if ( attribute.value.indexOf('{{') !== -1 ) {
                 if ( node._b_attributes === undefined )
                     node._b_attributes = {};
-                node._b_attributes[attribute.name] = parts;
+                node._b_attributes[attribute.name] = new bjs.Expression(attribute.value);
+                let i, links = node._b_attributes[attribute.name].getLinks();
+                for ( i in links )
+                    this._link(node, links[i]);
                 this._apply_attributes(node);
             }
         }
@@ -97,6 +86,8 @@ bjs.Model = class Model {
             this._apply_attributes(node, property);
         else
             this._parse_attributes(node);
+        if ( node instanceof Text )
+            return;
         if ( node.hasAttribute('b-for') )
             this._parse_for(node, property);
         if ( node.hasAttribute('b-base') )
@@ -105,7 +96,6 @@ bjs.Model = class Model {
         for ( i = 0; i < nodes.length; i++ ) {
             tmp = nodes[i];
             if (
-                tmp instanceof Text ||
                 tmp instanceof Comment ||
                 tmp instanceof HTMLBRElement ||
                 tmp instanceof HTMLScriptElement
@@ -245,19 +235,23 @@ bjs.Model = class Model {
     }
 
     _replace_local(node, local, base) {
+        let regexp = new RegExp('({{.*?)' + local.replace('.', '\.'), 'gim');
+        if ( node instanceof Text ) {
+            if ( node.nodeValue.match(regexp) )
+                node.nodeValue = node.nodeValue.replace(regexp, '$1' + base);
+            return;
+        }
         let i, nodes, tmp, attribute,
-            attributes = node.attributes,
-            regexp = new RegExp('(.*{{.*)' + local.replace('.', '\.') + '\.(.*}}.*)', 'gim');
+            attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
             if ( attribute.value.match(regexp) )
-                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base + '.$2'));
+                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base));
         }
         nodes = node.childNodes;
         for ( i = 0; i < nodes.length; i++ ) {
             tmp = nodes[i];
             if (
-                tmp instanceof Text ||
                 tmp instanceof Comment ||
                 tmp instanceof HTMLBRElement ||
                 tmp instanceof HTMLScriptElement
