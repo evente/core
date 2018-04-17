@@ -11,6 +11,8 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         if ( prop === 'constructor' )
             return { name: 'Proxy' };
         if ( target[prop] === undefined ) {
+            if ( prop === 'keys'  )
+                return Object.keys(target);
             if ( prop === 'length'  )
                 return Object.keys(target).length;
             return;

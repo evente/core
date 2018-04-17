@@ -11,17 +11,17 @@
             <select b-for="items" b-as="item" b-key="id" b-model="item_id">
                 <option value="{{item.id}}">{{item.name}} ({{item.id}})</option>
             </select>
-            <input type="number" b-model="item_id" min="0" max="{{items.length}}">
+            <input type="number" b-model="item_id" min="0" max="{{ items.keys | max }}">
         </div>
-        <div b-base="items" b-key="item_id">
+        <div b-base="items" b-key="item_id" style="{{ items[item_id] | empty:'display: none;' }}">
             <label>id</label>   <span b-field="id"></span>           <br>
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
         </div>
-        <h2>Items count: {{items.length}}</h1>
+        <h2>Items count: {{items.length}}</h2>
         <div style="font-size: 1.{{item_id}}em;" b-for="items" b-as="item" b-key="id">
             <p>
-                id: <span b-field="id"></span>
+                id: {{item.id}}
                 name: <span b-field="name"></span>
                 desc: <span b-field="desc"></span>
             </p>

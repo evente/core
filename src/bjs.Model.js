@@ -4,10 +4,11 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 bjs.Model = class Model {
 
     constructor(selector, data) {
-        let model = this;
+        if ( data )
+            data.strings = bjs.strings;
         bjs.models.push(this);
         this.proxyHandler = new bjs.ModelProxyHandler(this);
-        this.data = new Proxy(data || {}, this.proxyHandler);
+        this.data = new Proxy(data || { string: bjs.strings }, this.proxyHandler);
         this.paths = new WeakMap();
         this.links = {};
         this.selector = new bjs.Selector(selector);

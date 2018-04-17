@@ -4,7 +4,7 @@ Object.defineProperty(
     {
         value: function(field) {
             let ref = this;
-            let path = field.split('.');
+            let path = field.toString().split('.');
             let len = path.length;
             for ( let i = 0; i < len; i++ ) {
                 if ( ref[ path[i] ] !== undefined )
@@ -23,7 +23,7 @@ Object.defineProperty(
     {
         value: function(field, value) {
             let ref = this;
-            let path = field.split('.');
+            let path = field.toString().split('.');
             let len = path.length;
             for ( let i = 0; i < len - 1; i++  ) {
                 if ( ref[ path[i] ] === undefined  )
