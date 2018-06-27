@@ -1,4 +1,4 @@
-const bjs = require('../node/tests.js');
+const bjs = require('../bin/test.js');
 
 const html_model =
     '<!-- html -->' +

@@ -6,8 +6,8 @@
     "url": "https://github.com/apoprotsky/bjs.git"
   },
   "scripts": {
-    "build": "node node/build.js",
-    "start": "node node/server.js",
+    "build": "node bin/build.js",
+    "start": "node bin/server.js",
     "test": "jest"
   },
   "dependencies": {},
@@ -21,7 +21,7 @@
   "jest": {
     "collectCoverage": true,
     "testMatch": [
-      "**/tests/*.js?(x)"
+      "**/test/*.js?(x)"
     ],
     "verbose": true
   }

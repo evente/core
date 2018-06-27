@@ -5,12 +5,12 @@ bjs.Expression = class Expression {
 
     constructor(string) {
         bjs.expressions.push(this);
-        this._tree = this._parse(string.trim());
+        this.tree = this.parse(string.trim());
     }
 
     eval(model, item) {
         if ( item === undefined )
-            item = this._tree;
+            item = this.tree;
         let value, tmp, number, type = typeof item;
         switch ( type ) {
             case 'string':
@@ -62,7 +62,7 @@ bjs.Expression = class Expression {
 
     getLinks(item) {
         if ( item === undefined )
-            item = this._tree;
+            item = this.tree;
         let param, type, links = [];
         for ( let i in item.params ) {
             param = item.params[i];
@@ -88,14 +88,14 @@ bjs.Expression = class Expression {
         return links;
     }
 
-    _parse(data) {
-        data = this._parse_unclosed(data);
-        data = this._parse_strings(data);
-        data = this._parse_tokens(data);
-        return this._parse_tree(data);
+    parse(data) {
+        data = this.parse_unclosed(data);
+        data = this.parse_strings(data);
+        data = this.parse_tokens(data);
+        return this.parse_tree(data);
     }
 
-    _parse_unclosed(string) {
+    parse_unclosed(string) {
         let pos = 0,
             tmp_string = '',
             tmp,
@@ -126,7 +126,7 @@ bjs.Expression = class Expression {
         return tmp_string;
     }
 
-    _parse_strings(string) {
+    parse_strings(string) {
         let result = '',
             pos = 0,
             str = { start: 0 },
@@ -153,7 +153,7 @@ bjs.Expression = class Expression {
         return result;
     }
 
-    _parse_tokens(string) {
+    parse_tokens(string) {
         let pos = 0,
             tmp,
             match,
@@ -180,7 +180,7 @@ bjs.Expression = class Expression {
         return tokens;
     }
 
-    _parse_tree(tokens, item) {
+    parse_tree(tokens, item) {
         if ( item === undefined )
             item = {};
         if ( item.params === undefined )
@@ -201,25 +201,25 @@ bjs.Expression = class Expression {
                         if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
                             item = { type: token, params: [ item ] };
                         if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
-                            item.params.push(this._parse_tree(
+                            item.params.push(this.parse_tree(
                                 tokens,
                                 { type: token, params: [ item.params.pop() ] }
                             ));
                     } else {
-                        item.params.push(this._parse_tree(
+                        item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
                         ));
                     }
                 break;
                 case '(':
-                    item.params.push(this._parse_tree(tokens));
+                    item.params.push(this.parse_tree(tokens));
                 break;
                 case ')':
                     return item;
                 break;
                 case '[':
-                    item.params.push( { type: 'index', params: [ item.params.pop(), this._parse_tree(tokens) ] } );
+                    item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
                 break;
                 case ']':
                     if ( item.type === undefined )
@@ -233,7 +233,7 @@ bjs.Expression = class Expression {
                     item.name = tokens.shift();
                     token = tokens.shift();
                     while ( token === ':' ) {
-                        item.params.push( this._parse_tree(tokens) );
+                        item.params.push( this.parse_tree(tokens) );
                         token = tokens.shift();
                     }
                     tokens.unshift(token);

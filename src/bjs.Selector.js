@@ -26,11 +26,11 @@ bjs.Selector = class Selector extends Array {
     }
 
     addClass(classes) {
-        return this._class('add', classes);
+        return this.classes('add', classes);
     }
 
     attr(name, value) {
-        return this._forEach({
+        return this.forEach({
             'action': 'attr',
             'name': name,
             'value': value
@@ -38,7 +38,7 @@ bjs.Selector = class Selector extends Array {
     }
 
     contains(node) {
-        return this._forEach({
+        return this.forEach({
             'action': 'contains',
             'node': node
         });
@@ -49,7 +49,7 @@ bjs.Selector = class Selector extends Array {
     }
 
     find(selector) {
-        return this._forEach({
+        return this.forEach({
             'action': 'find',
             'selector': selector
         });
@@ -60,7 +60,7 @@ bjs.Selector = class Selector extends Array {
     }
 
     hasClass(className, all) {
-        return this._forEach({
+        return this.forEach({
             'action': 'hasClass',
             'class': className,
             'all': all
@@ -68,14 +68,14 @@ bjs.Selector = class Selector extends Array {
     }
 
     html(html) {
-        return this._forEach({
+        return this.forEach({
             'action': 'html',
             'value': html
         });
     }
 
     is(selector, all) {
-        return this._forEach({
+        return this.forEach({
             'action': 'is',
             'selector': selector,
             'all': all
@@ -83,34 +83,34 @@ bjs.Selector = class Selector extends Array {
     }
 
     parent() {
-        return this._forEach({
+        return this.forEach({
             'action': 'parent'
         });
     }
 
     removeClass(classes) {
-        return this._class('remove', classes);
+        return this.classes('remove', classes);
     }
 
     text(text) {
-        return this._forEach({
+        return this.forEach({
             'action': 'text',
             'value': text
         });
     }
 
     toggleClass(classes, active) {
-        return this._class('toggle', classes);
+        return this.classes('toggle', classes);
     }
 
     val(value) {
-        return this._forEach({
+        return this.forEach({
             'action': 'val',
             'value': value
         });
     }
 
-    _class(action, classes, active) {
+    classes(action, classes, active) {
         if ( typeof classes === 'string' )
             classes = classes.split(' ');
         for ( let i in this ) {
@@ -125,7 +125,7 @@ bjs.Selector = class Selector extends Array {
         return this;
     }
 
-    _forEach(options) {
+    forEach(options) {
         if ( options.value !== undefined ) {
             for ( let i in this ) {
                 switch ( options.action ) {

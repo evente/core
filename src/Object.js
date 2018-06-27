@@ -3,10 +3,13 @@ Object.defineProperty(
     'getProperty',
     {
         value: function(field) {
-            let ref = this;
-            let path = field.toString().split('.');
-            let len = path.length;
-            for ( let i = 0; i < len; i++ ) {
+            if ( field === '' )
+                return this;
+            let i,
+                ref = this,
+                path = field.toString().split('.'),
+                len = path.length;
+            for ( i = 0; i < len; i++ ) {
                 if ( ref[ path[i] ] !== undefined )
                     ref = ref[ path[i] ];
                 else
@@ -22,10 +25,11 @@ Object.defineProperty(
     'setProperty',
     {
         value: function(field, value) {
-            let ref = this;
-            let path = field.toString().split('.');
-            let len = path.length;
-            for ( let i = 0; i < len - 1; i++  ) {
+            let i,
+                ref = this,
+                path = field.toString().split('.'),
+                len = path.length;
+            for ( i = 0; i < len - 1; i++  ) {
                 if ( ref[ path[i] ] === undefined  )
                     ref[ path[i] ] = {};
                 ref = ref[ path[i] ];

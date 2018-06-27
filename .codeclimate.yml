@@ -14,13 +14,13 @@ engines:
 
 ratings:
   paths:
-    - "node/*"
+    - "bin/*"
     - "src/*.js"
 
 exclude_paths:
   - "LICENSE"
   - "README*"
   - "package.json"
-  - "build/"
+  - "dist/"
   - "html/"
-  - "tests/"
+  - "test/"

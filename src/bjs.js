@@ -18,22 +18,26 @@ bjs.filters = {
         return params[0] ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
     },
     min: function(params) {
+        if ( params[0] === undefined || params[0] === null )
+            return '';
         return params[0].sort()[0];
     },
     max: function(params) {
+        if ( params[0] === undefined || params[0] === null )
+            return '';
         return params[0].sort().reverse()[0];
     }
 }
 
 bjs.__proto__.getModel = function(node) {
-    for ( let i in this.models ) {
+    for ( var i in this.models ) {
         if ( this.models[i].selector.contains(node) )
             return this.models[i];
     }
 }
 
 bjs.__proto__.getStringIndex = function(string) {
-    let index = bjs.strings.indexOf(string);
+    var index = bjs.strings.indexOf(string);
     if ( index === -1 ) {
         bjs.strings.push(string);
         index = bjs.strings.indexOf(string);
@@ -42,14 +46,14 @@ bjs.__proto__.getStringIndex = function(string) {
 }
 
 bjs.__proto__.observe = function(mutations) {
-    let mutation, tmp, model, i, j;
+    var mutation, tmp, model, i, j;
     for ( i in mutations ) {
         mutation = mutations[i];
         for ( j = 0; j < mutation.removedNodes.length; j++ ) {
             tmp = mutation.removedNodes[j];
-            model = tmp._b_model || bjs.getModel(tmp);
+            model = tmp.b_model || bjs.getModel(tmp);
             if ( model )
-                model._unlink(tmp);
+                model.unlink(tmp);
         }
     }
 }
