@@ -19,14 +19,14 @@
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
         </div>
         <h2>Items count: {{items.length}}</h2>
-        <div style="font-size: 1.{{item_id}}em;" b-for="items" b-as="item" b-key="id">
-            <p>
+        <div style="padding-left: {{10 * item_id}}px;" b-for="items" b-as="item" b-key="id">
+            <a href="/items/{{item.id}}" style="display: block;">
                 id: {{item.id}}
                 name: <span b-field="name"></span>
                 desc: <span b-field="desc"></span>
-            </p>
+            </a>
         </div>
-        <script src="../dist/bjs.min.js"></script>
+        <script src="/dist/bjs.min.js"></script>
         <script>
             let app = new bjs.App('body', {
                 header: 'header',
@@ -37,6 +37,7 @@
                     { id: 1, name: 'one' },
                 ],
             });
+            app.route('/items/:id', options => { app.data.item_id = options.id; });
         </script>
     </body>
 </html>

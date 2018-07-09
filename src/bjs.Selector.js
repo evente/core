@@ -37,6 +37,13 @@ bjs.Selector = class Selector extends Array {
         });
     }
 
+    closest(selector) {
+        return this.forEach({
+            'action': 'closest',
+            'selector': selector
+        });
+    }
+
     contains(node) {
         return this.forEach({
             'action': 'contains',
@@ -149,6 +156,17 @@ bjs.Selector = class Selector extends Array {
                     tmp = this[i].getAttribute(options.name);
                     result.push(tmp !== null ? tmp : undefined );
                 break;
+                case 'closest':
+                    tmp = this[i].parentNode;
+                    while ( !tmp.matches(options.selector) ) {
+                        tmp = tmp.parentNode;
+                        if ( tmp instanceof HTMLDocument ) {
+                            tmp = null;
+                            break;
+                        }
+                    }
+                    result.push(tmp);
+                break;
                 case 'contains':
                     if ( this[i] === options.node || this[i].contains(options.node) )
                         return true;
@@ -183,6 +201,7 @@ bjs.Selector = class Selector extends Array {
         switch ( options.action ) {
             case 'contains':
                 return false;
+            case 'closest':
             case 'find':
             case 'parent':
                 return new bjs.Selector(result, this);

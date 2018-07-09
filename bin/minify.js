@@ -25,7 +25,8 @@ let inputFiles = [
     'bjs.Expression.js',
     //'bjs.Fetch.js',
     'bjs.ModelProxyHandler.js',
-    'bjs.Selector.js'
+    'bjs.Router.js',
+    'bjs.Selector.js',
 ];
 
 function minify() {

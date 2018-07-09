@@ -7,6 +7,7 @@ var bjs = function(selector){
 bjs.strings = [];
 bjs.expressions = [];
 bjs.models = [];
+bjs.routers = [];
 bjs.filters = {
     empty: function(params) {
         return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
@@ -36,6 +37,13 @@ bjs.__proto__.getModel = function(node) {
     }
 }
 
+bjs.__proto__.getRouter = function(node) {
+    for ( var i in this.routers ) {
+        if ( this.routers[i].selector.contains(node) )
+            return this.routers[i];
+    }
+}
+
 bjs.__proto__.getStringIndex = function(string) {
     var index = bjs.strings.indexOf(string);
     if ( index === -1 ) {
@@ -58,6 +66,11 @@ bjs.__proto__.observe = function(mutations) {
     }
 }
 
+bjs.__proto__.route = function() {
+    for ( let i in bjs.routers )
+        bjs.routers[i].handle(location.href);
+}
+
 if ( typeof b === 'undefined' )
     var b = bjs;
 if ( typeof $ === 'undefined' )
@@ -78,4 +91,5 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' ) {
             subtree: true
         }
     );
+    window.addEventListener('popstate', bjs.route);
 }

@@ -26,15 +26,17 @@ http.createServer((req, res) => {
         case '/dist': source = buildDir + file; break;
         default:      source = htmlDir + file;  break;
     }
+    if ( !fs.existsSync(source) )
+        source = htmlDir + 'dev.html';
     fs.readFile(source, function(err, contents) {
         if ( !err ) {
             res.end(contents);
         } else {
             console.dir(err);
-            res.writeHead(404, {'Content-Type': 'text/html'});
-            res.end('<h1>ERROR 404! File not found.</h1>');
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.end('ERROR 500! Internal Server Error');
         }
     });
 }).listen(port, hostname, () => {
-    console.log('Listening http on %s:%d', hostname, port);
+    console.log('Listening on http://%s:%d', hostname, port);
 });
