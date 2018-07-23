@@ -35,8 +35,10 @@ bjs.Router = class Router {
     handle(route, push) {
         route = this.normalize(route);
         if ( this.routes[route] !== undefined ) {
+            if ( push )
+                window.history.pushState({}, '', '/' + route);
             this.routes[route].callback(this.routes[route].options);
-            return;
+            return true;
         }
         let i, j, tmp,
             routes = Object.assign({}, this.routes),

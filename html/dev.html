@@ -13,7 +13,7 @@
             </select>
             <input type="number" b-model="item_id" min="0" max="{{ items.keys | max }}">
         </div>
-        <div b-base="items" b-key="item_id" style="{{ items[item_id] | empty:'display: none;' }}">
+        <div b-base="items" b-key="item_id" b-show="items[item_id]">
             <label>id</label>   <span b-field="id"></span>           <br>
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
@@ -47,6 +47,7 @@
                 items: {
                     0: { id: 0, name: 'zero' },
                     1: { id: 1, name: 'one' },
+                    3: { id: 3 },
                 },
             });
             app.route('/items/:id', options => { app.data.item_id = options.id; });

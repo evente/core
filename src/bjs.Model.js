@@ -40,12 +40,40 @@ bjs.Model = class Model {
             node.nodeValue = node.b_attributes.eval(this);
             return;
         }
-        for ( let i in node.b_attributes )
+        let i, tmp;
+        for ( i in node.b_attributes ) {
+            if ( ['b-show', 'b-hide'].indexOf(i) !== -1 )
+                continue;
             node.setAttribute(i, node.b_attributes[i].eval(this));
+        }
+        for ( i in node.b_attributes ) {
+            switch ( i ) {
+                case 'b-show':
+                case 'b-hide':
+                    if ( node.b_attributes[i].display === undefined )
+                        node.b_attributes[i].display = node.style.display;
+                    if (
+                        ( i === 'b-show' && node.b_attributes[i].expression.eval(this) ) ||
+                        ( i === 'b-hide' && !node.b_attributes[i].expression.eval(this) )
+                    ) {
+                        node.style.display = node.b_attributes[i].display;
+                        delete node.b_attributes[i].display;
+                    } else
+                        node.style.display = 'none';
+                break;
+            }
+        }
     }
 
     get_elements(link) {
-        let elements = new Set();
+        let i, elements = new Set();
+        for ( i in this.links ) {
+            if ( !i.startsWith(link + '.') )
+                continue;
+            this.links[i].forEach(function(element) {
+                elements.add(element);
+            });
+        }
         while ( link != '' ) {
             if ( this.links[link] !== undefined )
                 this.links[link].forEach(function(element) {
@@ -67,19 +95,34 @@ bjs.Model = class Model {
             }
             return;
         }
-        let i, links, attribute, attributes = node.attributes;
+        let i, j, links, attribute, attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
-            if ( attribute.value.indexOf('{{') !== -1 ) {
-                if ( node.b_attributes === undefined )
-                    node.b_attributes = {};
-                node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
-                links = node.b_attributes[attribute.name].getLinks();
-                for ( let i in links )
-                    this.link(node, links[i]);
-                this.apply_attributes(node);
+            if (
+                attribute.value.indexOf('{{') === -1 &&
+                ['b-show', 'b-hide'].indexOf(attribute.name) === -1
+            )
+                continue;
+            if ( node.b_attributes === undefined )
+                node.b_attributes = {};
+            switch ( attribute.name ) {
+                case 'b-show':
+                case 'b-hide':
+                    if ( !attribute.value.startsWith('{{') )
+                        node.setAttribute(attribute.name, '{{' + attribute.value + '}}');
+                    if ( node.b_attributes[attribute.name] === undefined )
+                        node.b_attributes[attribute.name] = {};
+                    node.b_attributes[attribute.name].expression = new bjs.Expression(attribute.value);
+                    links = node.b_attributes[attribute.name].expression.getLinks();
+                break;
+                default:
+                    node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
+                    links = node.b_attributes[attribute.name].getLinks();
             }
+            for ( j in links )
+                this.link(node, links[j]);
         }
+        this.apply_attributes(node);
     }
 
     parse_node(node, property) {
@@ -247,18 +290,20 @@ bjs.Model = class Model {
     }
 
     replace_local(node, local, base) {
-        let regexp = new RegExp('({{.*?)' + local.replace('.', '\.'), 'gim');
+        let regexp = new RegExp('({{.*?)' + local.replace('.', '\.') + '([ .}+\\-*/|=#&?])', 'gim');
         if ( node instanceof Text ) {
             if ( node.nodeValue.match(regexp) )
-                node.nodeValue = node.nodeValue.replace(regexp, '$1' + base);
+                node.nodeValue = node.nodeValue.replace(regexp, '$1' + base + '$2');
             return;
         }
         let i, nodes, tmp, attribute,
             attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
+            if ( ['b-show'].indexOf(attribute.name) !== -1 && !attribute.value.startsWith('{{') )
+                node.setAttribute(attribute.name, '{{' + attribute.value + '}}');
             if ( attribute.value.match(regexp) )
-                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base));
+                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base + '$2'));
         }
         nodes = node.childNodes;
         for ( i = 0; i < nodes.length; i++ ) {

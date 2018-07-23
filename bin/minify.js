@@ -13,7 +13,8 @@ let babelMinifyOptions = {
 }
 
 let inputDir = 'src/';
-let outputFile = 'dist/bjs.min.js';
+let outputFile = 'dist/bjs.js';
+let outputFileMinified = 'dist/bjs.min.js';
 let inputFiles = [
     // Extensions
     'Object.js',
@@ -36,8 +37,9 @@ function minify() {
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
     try {
+        fs.writeFileSync(outputFile, inputCode);
         let outputCode = babelMinify(inputCode, babelMinifyOptions);
-        fs.writeFileSync(outputFile, outputCode);
+        fs.writeFileSync(outputFileMinified, outputCode);
         console.log('Rebuild done!');
     } catch (e) {
         console.log('Rebuild cannot be done! Source code has errors!');

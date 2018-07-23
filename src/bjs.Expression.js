@@ -27,16 +27,26 @@ bjs.Expression = class Expression {
                     case '/':
                         for ( let i in item.params ) {
                             tmp = this.eval(model, item.params[i]);
+                            if ( tmp === undefined || tmp === null )
+                                continue;
                             if ( (value === undefined || typeof value === 'number') && typeof tmp !== 'number' ) {
                                 number = parseFloat(tmp);
                                 if ( !isNaN(number) )
                                     tmp = number;
                             }
-                            if ( value === undefined ) {
-                                value = tmp;
-                                continue;
-                            }
-                            value = bjs.Expression.operations[item.type].func(value, tmp);
+                            value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
+                        }
+                    break;
+                    case '&':
+                    case '?':
+                    case '=':
+                    case '#':
+                        for ( let i in item.params ) {
+                            tmp = this.eval(model, item.params[i]);
+                            number = parseFloat(tmp);
+                            if ( !isNaN(number) )
+                                tmp = number;
+                            value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
                         }
                     break;
                     case 'value':
@@ -91,6 +101,7 @@ bjs.Expression = class Expression {
     parse(data) {
         data = this.parse_unclosed(data);
         data = this.parse_strings(data);
+        data = this.parse_operations(data);
         data = this.parse_tokens(data);
         return this.parse_tree(data);
     }
@@ -101,7 +112,13 @@ bjs.Expression = class Expression {
             tmp,
             match,
             reg_exp = /{{.*?}}/gm,
-            reg_token = /[-+*/[\]()|:]/gm;
+            reg_token = new RegExp([
+                '=', '!=',
+                '!', '&&', '\\|\\|',
+                '-', '\\+', '\\*', '\\/',
+                '\\[', ']', '\\(', '\\)',
+                '\\|', ':',
+            ].join('|'));
         match = reg_exp.exec(string);
         while ( match ) {
             if ( match.index !== pos ) {
@@ -153,11 +170,18 @@ bjs.Expression = class Expression {
         return result;
     }
 
+    parse_operations(string) {
+        string = string.replace(/&&/, '&');
+        string = string.replace(/\|\|/, '?');
+        string = string.replace(/!=/, '#');
+        return string;
+    }
+
     parse_tokens(string) {
         let pos = 0,
             tmp,
             match,
-            reg_token = /[-+*/[\]()|:]/gm,
+            reg_token = /[!&?=#-+*/[\]()|:]/gm,
             tokens = [];
         pos = 0;
         reg_token.lastIndex = 0;
@@ -193,6 +217,10 @@ bjs.Expression = class Expression {
                 case '+':
                 case '*':
                 case '/':
+                case '&':
+                case '?':
+                case '=':
+                case '#':
                     if ( item.type === undefined ) {
                         item.type = token;
                         continue;
@@ -274,5 +302,9 @@ bjs.Expression.operations = {
     '+': { priority: 0, func: function(a, b) { return a + b; } },
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
-    '/': { priority: 1, func: function(a, b) { return a / b; } }
+    '/': { priority: 1, func: function(a, b) { return a / b; } },
+    '&': { priority: 2, func: function(a, b) { return a && b; } },
+    '?': { priority: 2, func: function(a, b) { return a || b; } },
+    '=': { priority: 3, func: function(a, b) { return a == b; } },
+    '#': { priority: 3, func: function(a, b) { return a != b; } }
 };

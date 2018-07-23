@@ -63,6 +63,12 @@ bjs.__proto__.observe = function(mutations) {
             if ( model )
                 model.unlink(tmp);
         }
+        for ( j = 0; j < mutation.addedNodes.length; j++ ) {
+            tmp = mutation.addedNodes[j];
+            model = tmp.b_model || bjs.getModel(tmp);
+            if ( model )
+                model.parse_node(tmp);
+        }
     }
 }
 
