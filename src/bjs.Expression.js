@@ -5,6 +5,7 @@ bjs.Expression = class Expression {
 
     constructor(string) {
         bjs.expressions.push(this);
+        this.expression = string;
         this.tree = this.parse(string.trim());
     }
 
@@ -15,10 +16,10 @@ bjs.Expression = class Expression {
         switch ( type ) {
             case 'string':
                 value = model.get(item);
-            break;
+                break;
             case 'number':
                 value = item;
-            break;
+                break;
             default:
                 switch ( item.type ) {
                     case '+':
@@ -36,7 +37,7 @@ bjs.Expression = class Expression {
                             }
                             value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
                         }
-                    break;
+                        break;
                     case '&':
                     case '?':
                     case '=':
@@ -48,23 +49,23 @@ bjs.Expression = class Expression {
                                 tmp = number;
                             value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
                         }
-                    break;
+                        break;
                     case 'value':
                         value = this.eval(model, item.params[0]);
-                    break;
+                        break;
                     case 'property':
                         value = this.eval(model, item.params[0]);
                         value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
-                    break;
+                        break;
                     case 'index':
                         value = model.get(item.params[0] + '.' + this.eval(model, item.params[1]));
-                    break;
+                        break;
                     case 'filter':
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
                         value = bjs.filters[item.name](params);
-                    break;
+                        break;
                 }
         }
         return value;
@@ -79,7 +80,7 @@ bjs.Expression = class Expression {
             type = typeof param;
             switch ( type ) {
                 case 'number':
-                break;
+                    break;
                 case 'string':
                     if ( param.endsWith('.length') ) {
                         links.push( param.substr(0, param.length - 7) );
@@ -90,7 +91,7 @@ bjs.Expression = class Expression {
                         continue;
                     }
                     links.push( param );
-                break;
+                    break;
                 default:
                     links.push.apply( links, this.getLinks(param) );
             }
@@ -102,6 +103,7 @@ bjs.Expression = class Expression {
         data = this.parse_unclosed(data);
         data = this.parse_strings(data);
         data = this.parse_operations(data);
+        this.expression = data;
         data = this.parse_tokens(data);
         return this.parse_tree(data);
     }
@@ -133,12 +135,12 @@ bjs.Expression = class Expression {
             pos += match[0].length;
             match = reg_exp.exec(string);
         }
-        tmp = string.substr(pos).trim();
+        tmp = string.substr(pos);
         if ( tmp.length )
             tmp_string += 'strings.' + bjs.getStringIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
-        if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') )
+        if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
             tmp_string = tmp_string.substr(1, tmp_string.length - 2);
         return tmp_string;
     }
@@ -166,13 +168,14 @@ bjs.Expression = class Expression {
             match = regexp.exec(string);
         }
         if ( pos < string.length )
-            result += string.substr(pos).trim();
+            result += string.substr(pos);
         return result;
     }
 
     parse_operations(string) {
         string = string.replace(/&&/, '&');
         string = string.replace(/\|\|/, '?');
+        string = string.replace(/==/, '=');
         string = string.replace(/!=/, '#');
         return string;
     }
@@ -181,7 +184,7 @@ bjs.Expression = class Expression {
         let pos = 0,
             tmp,
             match,
-            reg_token = /[!&?=#-+*/[\]()|:]/gm,
+            reg_token = /[!&?=#\-+*/[\]()|:]/gm,
             tokens = [];
         pos = 0;
         reg_token.lastIndex = 0;
@@ -189,9 +192,8 @@ bjs.Expression = class Expression {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos).trim();
-                if ( tmp.length ) {
+                if ( tmp.length )
                     tokens.push( string.substr(pos, match.index - pos).trim() );
-                }
                 pos = match.index;
             }
             tokens.push( match[0].trim() );
@@ -225,35 +227,32 @@ bjs.Expression = class Expression {
                         item.type = token;
                         continue;
                     }
-                    if ( item.type === token ) {
-                        if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
-                            item = { type: token, params: [ item ] };
-                        if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
-                            item.params.push(this.parse_tree(
-                                tokens,
-                                { type: token, params: [ item.params.pop() ] }
-                            ));
-                    } else {
+                    if ( item.type === token )
+                        break;
+                    if ( bjs.Expression.operations[item.type].priority == bjs.Expression.operations[token].priority )
+                        item.params.push({ type: token, params: [item.params.pop(), this.parse_tree(tokens)] });
+                    if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
+                        item = { type: token, params: [ item ] };
+                    if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
                         item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
                         ));
-                    }
-                break;
+                    break;
                 case '(':
                     item.params.push(this.parse_tree(tokens));
-                break;
+                    break;
                 case ')':
+                    if ( item.type === undefined )
+                        item.type = 'value';
                     return item;
-                break;
                 case '[':
                     item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
-                break;
+                    break;
                 case ']':
                     if ( item.type === undefined )
                         item.type = 'value';
                     return item;
-                break;
                 case '|':
                     if ( item.type !== undefined )
                         item = { params: [ item ] };
@@ -264,9 +263,9 @@ bjs.Expression = class Expression {
                         item.params.push( this.parse_tree(tokens) );
                         token = tokens.shift();
                     }
-                    tokens.unshift(token);
-                    return item;
-                break;
+                    if ( token !== undefined )
+                        tokens.unshift(token);
+                    break;
                 case ':':
                     tokens.unshift(token);
                     if ( !item.params.length )
@@ -274,7 +273,6 @@ bjs.Expression = class Expression {
                     if ( item.type === undefined )
                         item.type = 'value'
                     return item;
-                break;
                 default:
                     if ( token[0] == '.' ) {
                         token = token.substr(1);
@@ -303,8 +301,9 @@ bjs.Expression.operations = {
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
     '/': { priority: 1, func: function(a, b) { return a / b; } },
-    '&': { priority: 2, func: function(a, b) { return a && b; } },
-    '?': { priority: 2, func: function(a, b) { return a || b; } },
-    '=': { priority: 3, func: function(a, b) { return a == b; } },
-    '#': { priority: 3, func: function(a, b) { return a != b; } }
+    '&': { priority: 2, func: function(a, b) { return Boolean(a && b); } },
+    '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
+    '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
+    '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
+    'filter': { priority: 4 },
 };

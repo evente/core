@@ -69,6 +69,7 @@ bjs.filters = {
         return params[0].sort().reverse()[0];
     }
 }
+bjs.attributes = {};
 
 bjs.__proto__.getModel = function(node) {
     for ( var i in this.models ) {
@@ -142,6 +143,28 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' ) {
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
 
+bjs.Attribute = class Attribute {
+
+    constructor(node, attribute) {
+        this.expression = new bjs.Expression(attribute.value);
+    }
+
+    eval(node) {}
+
+    getLinks() {
+        return this.expression.getLinks();
+    }
+
+};
+
+bjs.Attribute.check = function(node, name) {
+    let value = node.getAttribute(name).trim();
+    if ( !value.startsWith('{{') )
+        node.setAttribute(name, '{{' + value + '}}');
+};
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    var bjs = require('./bjs.js');
+
 bjs.Model = class Model {
 
     constructor(selector, data) {
@@ -150,10 +173,21 @@ bjs.Model = class Model {
         bjs.models.push(this);
         this.proxyHandler = new bjs.ModelProxyHandler(this);
         this.shadow = data || { strings: bjs.strings };
-        this.data = new Proxy({$: ''}, this.proxyHandler);
+        this.proxy = new Proxy({$: ''}, this.proxyHandler);
         this.links = {};
         this.selector = new bjs.Selector(selector);
         this.init();
+    }
+
+    get data() {
+        return this.proxy;
+    }
+
+    set data(value) {
+        value.strings = bjs.strings;
+        this.shadow = value;
+        for ( let i in this.selector )
+            this.parse_node(this.selector.get(i), '');
     }
 
     get(property) {
@@ -183,26 +217,10 @@ bjs.Model = class Model {
         }
         let i, tmp;
         for ( i in node.b_attributes ) {
-            if ( ['b-show', 'b-hide'].indexOf(i) !== -1 )
-                continue;
-            node.setAttribute(i, node.b_attributes[i].eval(this));
-        }
-        for ( i in node.b_attributes ) {
-            switch ( i ) {
-                case 'b-show':
-                case 'b-hide':
-                    if ( node.b_attributes[i].display === undefined )
-                        node.b_attributes[i].display = node.style.display;
-                    if (
-                        ( i === 'b-show' && node.b_attributes[i].expression.eval(this) ) ||
-                        ( i === 'b-hide' && !node.b_attributes[i].expression.eval(this) )
-                    ) {
-                        node.style.display = node.b_attributes[i].display;
-                        delete node.b_attributes[i].display;
-                    } else
-                        node.style.display = 'none';
-                break;
-            }
+            if ( bjs.attributes[i] !== undefined )
+                node.b_attributes[i].eval(node);
+            else
+                node.setAttribute(i, node.b_attributes[i].eval(this));
         }
     }
 
@@ -239,44 +257,34 @@ bjs.Model = class Model {
         let i, j, links, attribute, attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
-            if (
-                attribute.value.indexOf('{{') === -1 &&
-                ['b-show', 'b-hide'].indexOf(attribute.name) === -1
-            )
+            if ( bjs.attributes[attribute.name] !== undefined )
+                bjs.attributes[attribute.name].check(node, attribute.name);
+            if (attribute.value.indexOf('{{') === -1)
                 continue;
             if ( node.b_attributes === undefined )
                 node.b_attributes = {};
-            switch ( attribute.name ) {
-                case 'b-show':
-                case 'b-hide':
-                    if ( !attribute.value.startsWith('{{') )
-                        node.setAttribute(attribute.name, '{{' + attribute.value + '}}');
-                    if ( node.b_attributes[attribute.name] === undefined )
-                        node.b_attributes[attribute.name] = {};
-                    node.b_attributes[attribute.name].expression = new bjs.Expression(attribute.value);
-                    links = node.b_attributes[attribute.name].expression.getLinks();
-                break;
-                default:
-                    node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
-                    links = node.b_attributes[attribute.name].getLinks();
-            }
+            if ( bjs.attributes[attribute.name] !== undefined )
+                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute);
+            else
+                node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
+            links = node.b_attributes[attribute.name].getLinks();
             for ( j in links )
                 this.link(node, links[j]);
         }
         this.apply_attributes(node);
     }
 
-    parse_node(node, property) {
-        if ( property )
-            this.apply_attributes(node, property);
+    parse_node(node, changed) {
+        if ( changed !== undefined )
+            this.apply_attributes(node, changed);
         else
             this.parse_attributes(node);
         if ( node instanceof Text )
             return;
         if ( node.hasAttribute('b-for') )
-            this.parse_for(node, property);
+            this.parse_for(node, changed);
         if ( node.hasAttribute('b-base') )
-            this.parse_base(node, property);
+            this.parse_base(node, changed);
         let i, tmp, nodes = node.childNodes;
         for ( i = 0; i < nodes.length; i++ ) {
             tmp = nodes[i];
@@ -286,7 +294,7 @@ bjs.Model = class Model {
                 tmp instanceof HTMLScriptElement
             )
                 continue;
-            this.parse_node(tmp);
+            this.parse_node(tmp, changed);
         }
         if ( node.hasAttribute('b-model') )
             this.parse_model(node);
@@ -302,10 +310,10 @@ bjs.Model = class Model {
         this.link(element, property);
         as = element.getAttribute('b-as') || '_';
         key = element.getAttribute('b-key');
-        items = this.data.getProperty(property);
+        items = this.get(property);
         for ( let i in items ) {
             value = items[i][key];
-            if ( changed && changed != property && !changed.startsWith(property + '.' + value) )
+            if ( changed !== undefined && !(property + '.' + value).startsWith(changed) )
                 continue;
             child = element.querySelector('[b-base="' + property + '.' + value + '"]');
             if ( !child ) {
@@ -316,19 +324,22 @@ bjs.Model = class Model {
                 this.replace_local(child, as, child.b_for);
                 element.appendChild(child);
             }
-            if ( changed )
+            if ( changed !== undefined )
                 this.parse_base(child, changed);
         }
-        if ( changed && changed === property ) {
-            for ( let i = 0; i < element.children.length; i++ ) {
-                child = element.children[i];
-                key = child.b_key || '';
+        if ( changed !== undefined && property.startsWith(changed) ) {
+            let i, remove = [];
+            for ( i = 0; i < element.childNodes.length; i++ ) {
+                child = element.childNodes[i];
+                key = child.b_key !== undefined ? child.b_key : '';
                 if (
                     items === undefined ||
                     ( items[key] === undefined && child.b_for !== undefined && child.b_for === property + '.' + key )
                 )
-                    child.remove();
+                    remove.push(child);
             }
+            for ( i in remove )
+                remove[i].remove();
         }
     }
 
@@ -374,7 +385,7 @@ bjs.Model = class Model {
         if ( property !== null ) {
             if ( old !== undefined )
                 this.unlink(element, old);
-            value = this.data.getProperty(property);
+            value = this.get(property);
             if ( value === undefined )
                 value = '';
             this.link(element, property);
@@ -441,8 +452,8 @@ bjs.Model = class Model {
             attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
             attribute = attributes[i];
-            if ( ['b-show'].indexOf(attribute.name) !== -1 && !attribute.value.startsWith('{{') )
-                node.setAttribute(attribute.name, '{{' + attribute.value + '}}');
+            if ( bjs.attributes[attribute.name] !== undefined )
+                bjs.attributes[attribute.name].check(node, attribute.name);
             if ( attribute.value.match(regexp) )
                 node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base + '$2'));
         }
@@ -506,10 +517,38 @@ bjs.App = class App extends bjs.Model {
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
 
+bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
+
+    constructor(node, attribute) {
+        super(node, attribute);
+        this.type = attribute.name;
+    }
+
+    eval(node) {
+        if ( this.display === undefined )
+            this.display = node.style.display;
+        if (
+            ( this.type == 'b-hide' && !this.expression.eval(node.b_model) ) ||
+            ( this.type == 'b-show' && this.expression.eval(node.b_model) )
+        ) {
+            node.style.display = this.display;
+            delete this.display;
+        } else
+            node.style.display = 'none';
+    }
+
+};
+
+bjs.attributes['b-hide'] = bjs.AttributeHideShow;
+bjs.attributes['b-show'] = bjs.AttributeHideShow;
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    var bjs = require('./bjs.js');
+
 bjs.Expression = class Expression {
 
     constructor(string) {
         bjs.expressions.push(this);
+        this.expression = string;
         this.tree = this.parse(string.trim());
     }
 
@@ -520,10 +559,10 @@ bjs.Expression = class Expression {
         switch ( type ) {
             case 'string':
                 value = model.get(item);
-            break;
+                break;
             case 'number':
                 value = item;
-            break;
+                break;
             default:
                 switch ( item.type ) {
                     case '+':
@@ -541,7 +580,7 @@ bjs.Expression = class Expression {
                             }
                             value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
                         }
-                    break;
+                        break;
                     case '&':
                     case '?':
                     case '=':
@@ -553,23 +592,23 @@ bjs.Expression = class Expression {
                                 tmp = number;
                             value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
                         }
-                    break;
+                        break;
                     case 'value':
                         value = this.eval(model, item.params[0]);
-                    break;
+                        break;
                     case 'property':
                         value = this.eval(model, item.params[0]);
                         value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
-                    break;
+                        break;
                     case 'index':
                         value = model.get(item.params[0] + '.' + this.eval(model, item.params[1]));
-                    break;
+                        break;
                     case 'filter':
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
                         value = bjs.filters[item.name](params);
-                    break;
+                        break;
                 }
         }
         return value;
@@ -584,7 +623,7 @@ bjs.Expression = class Expression {
             type = typeof param;
             switch ( type ) {
                 case 'number':
-                break;
+                    break;
                 case 'string':
                     if ( param.endsWith('.length') ) {
                         links.push( param.substr(0, param.length - 7) );
@@ -595,7 +634,7 @@ bjs.Expression = class Expression {
                         continue;
                     }
                     links.push( param );
-                break;
+                    break;
                 default:
                     links.push.apply( links, this.getLinks(param) );
             }
@@ -604,14 +643,10 @@ bjs.Expression = class Expression {
     }
 
     parse(data) {
-        //console.log('parse ->', data);
         data = this.parse_unclosed(data);
-        //console.log('parse_unclosed ->', data);
         data = this.parse_strings(data);
-        //console.log('parse_strings ->', data);
         data = this.parse_operations(data);
-        //console.log('parse_operations ->', data);
-        //console.log('-------------------');
+        this.expression = data;
         data = this.parse_tokens(data);
         return this.parse_tree(data);
     }
@@ -629,7 +664,6 @@ bjs.Expression = class Expression {
                 '\\[', ']', '\\(', '\\)',
                 '\\|', ':',
             ].join('|'));
-            //reg_token = /[-+*/[\]()|:]/gm;
         match = reg_exp.exec(string);
         while ( match ) {
             if ( match.index !== pos ) {
@@ -644,12 +678,12 @@ bjs.Expression = class Expression {
             pos += match[0].length;
             match = reg_exp.exec(string);
         }
-        tmp = string.substr(pos).trim();
+        tmp = string.substr(pos);
         if ( tmp.length )
             tmp_string += 'strings.' + bjs.getStringIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
-        if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') )
+        if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
             tmp_string = tmp_string.substr(1, tmp_string.length - 2);
         return tmp_string;
     }
@@ -677,13 +711,14 @@ bjs.Expression = class Expression {
             match = regexp.exec(string);
         }
         if ( pos < string.length )
-            result += string.substr(pos).trim();
+            result += string.substr(pos);
         return result;
     }
 
     parse_operations(string) {
         string = string.replace(/&&/, '&');
         string = string.replace(/\|\|/, '?');
+        string = string.replace(/==/, '=');
         string = string.replace(/!=/, '#');
         return string;
     }
@@ -692,7 +727,7 @@ bjs.Expression = class Expression {
         let pos = 0,
             tmp,
             match,
-            reg_token = /[!&?=#-+*/[\]()|:]/gm,
+            reg_token = /[!&?=#\-+*/[\]()|:]/gm,
             tokens = [];
         pos = 0;
         reg_token.lastIndex = 0;
@@ -700,9 +735,8 @@ bjs.Expression = class Expression {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos).trim();
-                if ( tmp.length ) {
+                if ( tmp.length )
                     tokens.push( string.substr(pos, match.index - pos).trim() );
-                }
                 pos = match.index;
             }
             tokens.push( match[0].trim() );
@@ -736,35 +770,32 @@ bjs.Expression = class Expression {
                         item.type = token;
                         continue;
                     }
-                    if ( item.type === token ) {
-                        if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
-                            item = { type: token, params: [ item ] };
-                        if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
-                            item.params.push(this.parse_tree(
-                                tokens,
-                                { type: token, params: [ item.params.pop() ] }
-                            ));
-                    } else {
+                    if ( item.type === token )
+                        break;
+                    if ( bjs.Expression.operations[item.type].priority == bjs.Expression.operations[token].priority )
+                        item.params.push({ type: token, params: [item.params.pop(), this.parse_tree(tokens)] });
+                    if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
+                        item = { type: token, params: [ item ] };
+                    if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
                         item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
                         ));
-                    }
-                break;
+                    break;
                 case '(':
                     item.params.push(this.parse_tree(tokens));
-                break;
+                    break;
                 case ')':
+                    if ( item.type === undefined )
+                        item.type = 'value';
                     return item;
-                break;
                 case '[':
                     item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
-                break;
+                    break;
                 case ']':
                     if ( item.type === undefined )
                         item.type = 'value';
                     return item;
-                break;
                 case '|':
                     if ( item.type !== undefined )
                         item = { params: [ item ] };
@@ -775,9 +806,9 @@ bjs.Expression = class Expression {
                         item.params.push( this.parse_tree(tokens) );
                         token = tokens.shift();
                     }
-                    tokens.unshift(token);
-                    return item;
-                break;
+                    if ( token !== undefined )
+                        tokens.unshift(token);
+                    break;
                 case ':':
                     tokens.unshift(token);
                     if ( !item.params.length )
@@ -785,7 +816,6 @@ bjs.Expression = class Expression {
                     if ( item.type === undefined )
                         item.type = 'value'
                     return item;
-                break;
                 default:
                     if ( token[0] == '.' ) {
                         token = token.substr(1);
@@ -814,10 +844,11 @@ bjs.Expression.operations = {
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
     '/': { priority: 1, func: function(a, b) { return a / b; } },
-    '&': { priority: 2, func: function(a, b) { return a && b; } },
-    '?': { priority: 2, func: function(a, b) { return a || b; } },
-    '=': { priority: 3, func: function(a, b) { return a == b; } },
-    '#': { priority: 3, func: function(a, b) { return a != b; } }
+    '&': { priority: 2, func: function(a, b) { return Boolean(a && b); } },
+    '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
+    '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
+    '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
+    'filter': { priority: 4 },
 };
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
@@ -866,12 +897,21 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         }
         if ( data[prop] === undefined )
             return;
-        if ( data[prop] !== null && typeof data[prop] === 'object' )
-            return new Proxy(
-                { $: ( target.$ ? target.$ + '.' : '' ) + prop },
-                this.model.proxyHandler
-            );
-        return data[prop];
+        if ( data[prop] !== null ) {
+            switch ( typeof data[prop] ) {
+                case 'object':
+                    return new Proxy(
+                        { $: ( target.$ ? target.$ + '.' : '' ) + prop },
+                        this.model.proxyHandler
+                    );
+                    break;
+                case 'function':
+                    if ( ['getProperty', 'setProperty'].indexOf(prop) === -1 )
+                        return function(...args) { return data[prop].apply(data, args) };
+                default:
+                    return data[prop];
+            }
+        }
     }
 
     getPrototypeOf(target) {
@@ -937,11 +977,18 @@ bjs.Router = class Router {
             callback: callback,
             options: options || {},
         };
+        this.trigger();
     }
 
     remove(route) {
         route = this.normalize(route);
         delete this.routes[route];
+    }
+
+    trigger(route) {
+        if ( route === undefined )
+            route = location.pathname;
+        this.handle(route);
     }
 
     handle(route, push) {

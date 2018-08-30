@@ -45,12 +45,21 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         }
         if ( data[prop] === undefined )
             return;
-        if ( data[prop] !== null && typeof data[prop] === 'object' )
-            return new Proxy(
-                { $: ( target.$ ? target.$ + '.' : '' ) + prop },
-                this.model.proxyHandler
-            );
-        return data[prop];
+        if ( data[prop] !== null ) {
+            switch ( typeof data[prop] ) {
+                case 'object':
+                    return new Proxy(
+                        { $: ( target.$ ? target.$ + '.' : '' ) + prop },
+                        this.model.proxyHandler
+                    );
+                    break;
+                case 'function':
+                    if ( ['getProperty', 'setProperty'].indexOf(prop) === -1 )
+                        return function(...args) { return data[prop].apply(data, args) };
+                default:
+                    return data[prop];
+            }
+        }
     }
 
     getPrototypeOf(target) {

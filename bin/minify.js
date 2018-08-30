@@ -20,9 +20,11 @@ let inputFiles = [
     'Object.js',
     // Order has matter
     'bjs.js',
+    'bjs.Attribute.js',
     'bjs.Model.js',
     // Order has no matter - ordered by name
     'bjs.App.js',
+    'bjs.AttributeHideShow.js',
     'bjs.Expression.js',
     //'bjs.Fetch.js',
     'bjs.ModelProxyHandler.js',

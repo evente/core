@@ -29,6 +29,7 @@ bjs.filters = {
         return params[0].sort().reverse()[0];
     }
 }
+bjs.attributes = {};
 
 bjs.__proto__.getModel = function(node) {
     for ( var i in this.models ) {

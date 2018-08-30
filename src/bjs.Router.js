@@ -25,11 +25,18 @@ bjs.Router = class Router {
             callback: callback,
             options: options || {},
         };
+        this.trigger();
     }
 
     remove(route) {
         route = this.normalize(route);
         delete this.routes[route];
+    }
+
+    trigger(route) {
+        if ( route === undefined )
+            route = location.pathname;
+        this.handle(route);
     }
 
     handle(route, push) {

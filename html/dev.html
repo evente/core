@@ -18,7 +18,7 @@
             <label>name</label> <input b-field="name">               <br>
             <label>desc</label> <textarea b-field="desc"></textarea> <br>
         </div>
-        <h2>Items count: {{items.length}}</h2>
+        <h2>Items count: {{items.length}}, id range: {{items.keys | min}}...{{items.keys | max}}</h2>
         <div style="padding-left: {{10 * item_id}}px;" b-for="items" b-as="item" b-key="id">
             <a href="/items/{{item.id}}" style="display: block;">
                 id: {{item.id}}
@@ -32,9 +32,11 @@
         <script src="/src/Object.js"></script>
         <!-- Order has matter -->
         <script src="/src/bjs.js"></script>
+        <script src="/src/bjs.Attribute.js"></script>
         <script src="/src/bjs.Model.js"></script>
         <!-- Order has no matter - ordered by name -->
         <script src="/src/bjs.App.js"></script>
+        <script src="/src/bjs.AttributeHideShow.js"></script>
         <script src="/src/bjs.Expression.js"></script>
         <!-- <script src="/src/bjs.Ajax.js"></script> -->
         <!-- <script src="/src/bjs.Fetch.js"></script> -->

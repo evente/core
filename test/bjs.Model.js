@@ -4,7 +4,7 @@ const html_model =
     '<!-- html -->' +
     '<h1 id="text">Items count is {{items.length}}!</h1>' +
     '<select id="for" b-for="items" b-as="item" b-key="id">' +
-    '   <option b-field="name" value="{{item.id}}">' +
+    '   <option value="{{item.id}}">' +
     '      <!-- item id -->' +
     '      {{item.id}}' +
     '   </option>' +
