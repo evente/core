@@ -18,14 +18,13 @@ bjs.Router = class Router {
         }
     }
 
-    add(route, callback, options) {
+    add(route, callback, params) {
         route = this.normalize(route);
         this.routes[route] = {
             parts: route.split('/'),
             callback: callback,
-            options: options || {},
+            params: params || {},
         };
-        this.trigger();
     }
 
     remove(route) {
@@ -33,10 +32,10 @@ bjs.Router = class Router {
         delete this.routes[route];
     }
 
-    trigger(route) {
+    trigger(route, push) {
         if ( route === undefined )
             route = location.pathname;
-        this.handle(route);
+        this.handle(route, push);
     }
 
     handle(route, push) {
@@ -44,12 +43,12 @@ bjs.Router = class Router {
         if ( this.routes[route] !== undefined ) {
             if ( push )
                 window.history.pushState({}, '', '/' + route);
-            this.routes[route].callback(this.routes[route].options);
+            this.routes[route].callback(this.routes[route].params);
             return true;
         }
         let i, j, tmp,
             routes = Object.assign({}, this.routes),
-            options = {},
+            params = {},
             part, parts = route.split('/');
         for ( i in parts ) {
             part = parts[i];
@@ -62,7 +61,7 @@ bjs.Router = class Router {
                 if ( tmp === part )
                     continue;
                 if ( tmp !== undefined && tmp[0] === ':' )
-                    options[ tmp.substr(1) ] = part;
+                    params[ tmp.substr(1) ] = part;
                 else
                     delete routes[j];
             }
@@ -71,7 +70,7 @@ bjs.Router = class Router {
             if ( push )
                 window.history.pushState({}, '', '/' + route);
             for ( j in routes )
-                routes[j].callback(Object.assign(routes[j].options, options));
+                routes[j].callback(Object.assign(routes[j].params, params));
         }
         return Object.keys(routes).length > 0;
     }

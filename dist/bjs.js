@@ -504,13 +504,18 @@ bjs.App = class App extends bjs.Model {
             this.router = new bjs.Router(this.selector);
     }
 
-    route(route, callback, options) {
+    route(route, callback, params) {
         if ( !this.router )
             return;
         if ( callback )
-            this.router.add(route, callback, options);
+            this.router.add(route, callback, params);
         else
             this.router.remove(route);
+    }
+
+    run() {
+        if ( this.router )
+            this.router.trigger();
     }
 
 };
@@ -953,6 +958,75 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
 
+bjs.Resource = class Resource {
+
+    constructor(url, type) {
+        this.url = url;
+        this.type = type || 'json';
+    }
+
+    get(params) {
+        return this.method('get', params);
+    }
+
+    post(params) {
+        return this.method('post', params);
+    }
+
+    put(params) {
+        return this.method('put', params);
+    }
+
+    delete(params) {
+        return this.method('delete', params);
+    }
+
+    method(method, params) {
+        params = params || {};
+        let url = this.url.replace(/\/:([-_0-9a-z]+)(\/|$)/ig, (match, param, end) => {
+                let tmp = params[param] || '';
+                delete params[param];
+                return '/' + tmp + end;
+            }),
+            options = { mode: 'cors', method: method };
+        switch ( method ) {
+            case 'get':
+            case 'delete':
+                let key, tmp = [];
+                for ( key in params )
+                    tmp.push(key + '=' + encodeURIComponent(params[key]));
+                url += '?' + tmp.join('&');
+                break;
+            case 'post':
+            case 'put':
+                options.body = JSON.stringify(params);
+                break;
+        }
+        if ( ['post', 'put'].indexOf(method) !== -1 )
+            options.body = JSON.stringify(params);
+        return fetch(url, options).then(response => {
+            this.ok = response.ok;
+            this.status = response.status;
+            switch ( this.type ) {
+                case 'json': return response.json();     break;
+                case 'form': return response.formData(); break;
+                default:     return response.text();
+            }
+        }).then(response => {
+            if ( !this.ok ) {
+                let error = new Error();
+                error.status = this.status;
+                error.data = response;
+                throw error;
+            }
+            return response;
+        });
+    }
+
+}
+if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
+    var bjs = require('./bjs.js');
+
 bjs.Router = class Router {
 
     constructor(selector) {
@@ -970,14 +1044,13 @@ bjs.Router = class Router {
         }
     }
 
-    add(route, callback, options) {
+    add(route, callback, params) {
         route = this.normalize(route);
         this.routes[route] = {
             parts: route.split('/'),
             callback: callback,
-            options: options || {},
+            params: params || {},
         };
-        this.trigger();
     }
 
     remove(route) {
@@ -985,10 +1058,10 @@ bjs.Router = class Router {
         delete this.routes[route];
     }
 
-    trigger(route) {
+    trigger(route, push) {
         if ( route === undefined )
             route = location.pathname;
-        this.handle(route);
+        this.handle(route, push);
     }
 
     handle(route, push) {
@@ -996,12 +1069,12 @@ bjs.Router = class Router {
         if ( this.routes[route] !== undefined ) {
             if ( push )
                 window.history.pushState({}, '', '/' + route);
-            this.routes[route].callback(this.routes[route].options);
+            this.routes[route].callback(this.routes[route].params);
             return true;
         }
         let i, j, tmp,
             routes = Object.assign({}, this.routes),
-            options = {},
+            params = {},
             part, parts = route.split('/');
         for ( i in parts ) {
             part = parts[i];
@@ -1014,7 +1087,7 @@ bjs.Router = class Router {
                 if ( tmp === part )
                     continue;
                 if ( tmp !== undefined && tmp[0] === ':' )
-                    options[ tmp.substr(1) ] = part;
+                    params[ tmp.substr(1) ] = part;
                 else
                     delete routes[j];
             }
@@ -1023,7 +1096,7 @@ bjs.Router = class Router {
             if ( push )
                 window.history.pushState({}, '', '/' + route);
             for ( j in routes )
-                routes[j].callback(Object.assign(routes[j].options, options));
+                routes[j].callback(Object.assign(routes[j].params, params));
         }
         return Object.keys(routes).length > 0;
     }

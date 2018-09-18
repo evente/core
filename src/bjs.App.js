@@ -12,13 +12,18 @@ bjs.App = class App extends bjs.Model {
             this.router = new bjs.Router(this.selector);
     }
 
-    route(route, callback, options) {
+    route(route, callback, params) {
         if ( !this.router )
             return;
         if ( callback )
-            this.router.add(route, callback, options);
+            this.router.add(route, callback, params);
         else
             this.router.remove(route);
+    }
+
+    run() {
+        if ( this.router )
+            this.router.trigger();
     }
 
 };

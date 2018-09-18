@@ -28,6 +28,7 @@ let inputFiles = [
     'bjs.Expression.js',
     //'bjs.Fetch.js',
     'bjs.ModelProxyHandler.js',
+    'bjs.Resource.js',
     'bjs.Router.js',
     'bjs.Selector.js',
 ];
