@@ -42,13 +42,17 @@ bjs.Expression = class Expression {
                     case '?':
                     case '=':
                     case '#':
+                        value = [];
                         for ( let i in item.params ) {
                             tmp = this.eval(model, item.params[i]);
                             number = parseFloat(tmp);
                             if ( !isNaN(number) )
                                 tmp = number;
-                            value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
+                            value.push(tmp);
+                            if ( value.length > 1 )
+                                value = [ bjs.Expression.operations[item.type].func(value[0], value[1]) ];
                         }
+                        value = value[0];
                         break;
                     case 'value':
                         value = this.eval(model, item.params[0]);

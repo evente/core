@@ -24,14 +24,14 @@ bjs.Resource = class Resource {
         return this.method('delete', params);
     }
 
-    method(method, params) {
+    method(method, params, headers) {
         params = params || {};
         let url = this.url.replace(/\/:([-_0-9a-z]+)(\/|$)/ig, (match, param, end) => {
                 let tmp = params[param] || '';
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || bjs.Resource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -67,3 +67,5 @@ bjs.Resource = class Resource {
     }
 
 }
+
+bjs.Resource.headers = {};
