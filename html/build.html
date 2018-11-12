@@ -30,11 +30,11 @@
         <script>
             let app = new bjs.App('body', {
                 item_id: 1,
-                items: [
-                    { id: 0, name: 'zero' },
-                    { id: 1, name: 'one' },
+                items: {
+                    0: { id: 0, name: 'zero' },
+                    1: { id: 1, name: 'one' },
                     3: { id: 3 },
-                ],
+                },
             });
             app.route('/items/:id', options => { app.data.item_id = options.id; });
         </script>

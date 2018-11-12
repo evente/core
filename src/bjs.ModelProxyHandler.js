@@ -52,10 +52,6 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
                         { $: ( target.$ ? target.$ + '.' : '' ) + prop },
                         this.model.proxyHandler
                     );
-                    break;
-                case 'function':
-                    if ( ['getProperty', 'setProperty'].indexOf(prop) === -1 )
-                        return function(...args) { return data[prop].apply(data, args) };
                 default:
                     return data[prop];
             }

@@ -38,8 +38,6 @@ Object.defineProperty(
         }
     }
 );
-'use strict';
-
 var bjs = function(selector){
     return new bjs.Selector(selector);
 }
@@ -58,15 +56,25 @@ bjs.filters = {
             params[0] = tmp;
         return params[0] ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
     },
-    min: function(params) {
+    sort: function(params) {
         if ( params[0] === undefined || params[0] === null )
             return '';
-        return params[0].sort()[0];
+        let values = params[0] instanceof Array ? params[0].slice() : params[0].keys;
+        if ( values === undefined )
+            return '';
+        return values.sort();
+    },
+    reverse: function(params) {
+        let tmp = bjs.filters.sort(params);
+        return tmp ? tmp.reverse() : '';
+    },
+    min: function(params) {
+        let tmp = bjs.filters.sort(params);
+        return tmp ? tmp[0] : '';
     },
     max: function(params) {
-        if ( params[0] === undefined || params[0] === null )
-            return '';
-        return params[0].sort().reverse()[0];
+        let tmp = bjs.filters.reverse(params);
+        return tmp ? tmp[0] : '';
     }
 }
 bjs.attributes = {};
@@ -913,10 +921,6 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
                         { $: ( target.$ ? target.$ + '.' : '' ) + prop },
                         this.model.proxyHandler
                     );
-                    break;
-                case 'function':
-                    if ( ['getProperty', 'setProperty'].indexOf(prop) === -1 )
-                        return function(...args) { return data[prop].apply(data, args) };
                 default:
                     return data[prop];
             }
