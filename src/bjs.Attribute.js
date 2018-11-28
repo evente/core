@@ -5,9 +5,13 @@ bjs.Attribute = class Attribute {
 
     constructor(node, attribute) {
         this.expression = new bjs.Expression(attribute.value);
+        this.name = attribute.name;
+        this.node = node;
     }
 
-    eval(node) {}
+    eval() {
+        this.node.setAttribute(this.name, this.expression.eval(this.node.b_model) || '');
+    }
 
     getLinks() {
         return this.expression.getLinks();
@@ -17,6 +21,5 @@ bjs.Attribute = class Attribute {
 
 bjs.Attribute.check = function(node, name) {
     let value = node.getAttribute(name).trim();
-    if ( !value.startsWith('{{') )
-        node.setAttribute(name, '{{' + value + '}}');
+    return !value.startsWith('{{') ? '{{' + value + '}}' : value;
 };

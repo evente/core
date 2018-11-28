@@ -3,7 +3,6 @@ var bjs = function(selector){
 }
 
 bjs.strings = [];
-bjs.expressions = [];
 bjs.models = [];
 bjs.routers = [];
 bjs.filters = {

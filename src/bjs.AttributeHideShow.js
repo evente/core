@@ -8,17 +8,18 @@ bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
         this.type = attribute.name;
     }
 
-    eval(node) {
-        if ( this.display === undefined )
-            this.display = node.style.display;
+    eval() {
+        //if ( this.display === undefined )
+        //    this.display = this.node.style.display;
         if (
-            ( this.type == 'b-hide' && !this.expression.eval(node.b_model) ) ||
-            ( this.type == 'b-show' && this.expression.eval(node.b_model) )
+            ( this.type == 'b-hide' && !this.expression.eval(this.node.b_model) ) ||
+            ( this.type == 'b-show' && this.expression.eval(this.node.b_model) )
         ) {
-            node.style.display = this.display;
-            delete this.display;
+            //node.style.display = this.display;
+            //delete this.display;
+            this.node.style.display = '';
         } else
-            node.style.display = 'none';
+            this.node.style.display = 'none';
     }
 
 };

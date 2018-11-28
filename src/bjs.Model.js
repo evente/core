@@ -45,16 +45,13 @@ bjs.Model = class Model {
     }
 
     apply_attributes(node) {
+        if ( node instanceof Text && node.b_expression !== undefined )
+            node.nodeValue = node.b_expression.eval(this);
         if ( node.b_attributes === undefined )
             return;
-        if ( node instanceof Text ) {
-            node.nodeValue = node.b_attributes.eval(this);
-            return;
-        }
-        let i, tmp;
-        for ( i in node.b_attributes ) {
+        for ( let i in node.b_attributes ) {
             if ( bjs.attributes[i] !== undefined )
-                node.b_attributes[i].eval(node);
+                node.b_attributes[i].eval();
             else
                 node.setAttribute(i, node.b_attributes[i].eval(this));
         }
@@ -82,8 +79,8 @@ bjs.Model = class Model {
     parse_attributes(node) {
         if ( node instanceof Text ) {
             if ( node.nodeValue.indexOf('{{') !== -1 ) {
-                node.b_attributes = new bjs.Expression(node.nodeValue);
-                let i, links = node.b_attributes.getLinks();
+                node.b_expression = new bjs.Expression(node.nodeValue);
+                let i, links = node.b_expression.getLinks();
                 for ( i in links )
                     this.link(node, links[i]);
                 this.apply_attributes(node);
@@ -92,9 +89,12 @@ bjs.Model = class Model {
         }
         let i, j, links, attribute, attributes = node.attributes;
         for ( i = 0; i < attributes.length; i++ ) {
-            attribute = attributes[i];
+            attribute = {
+                name: attributes[i].name,
+                value: attributes[i].value
+            };
             if ( bjs.attributes[attribute.name] !== undefined )
-                bjs.attributes[attribute.name].check(node, attribute.name);
+                attribute.value = bjs.attributes[attribute.name].check(node, attribute.name);
             if (attribute.value.indexOf('{{') === -1)
                 continue;
             if ( node.b_attributes === undefined )
@@ -111,29 +111,27 @@ bjs.Model = class Model {
     }
 
     parse_node(node, changed) {
+        if ( !(node instanceof Text) ) {
+            if ( node.hasAttribute('b-for') )
+                this.parse_for(node, changed);
+            if ( node.hasAttribute('b-base') )
+                this.parse_base(node, changed);
+            let i, tmp, nodes = node.childNodes;
+            for ( i = 0; i < nodes.length; i++ ) {
+                tmp = nodes[i];
+                if (
+                    tmp instanceof Comment ||
+                    tmp instanceof HTMLBRElement ||
+                    tmp instanceof HTMLScriptElement
+                )
+                    continue;
+                this.parse_node(tmp, changed);
+            }
+        }
         if ( changed !== undefined )
-            this.apply_attributes(node, changed);
+            this.apply_attributes(node);
         else
             this.parse_attributes(node);
-        if ( node instanceof Text )
-            return;
-        if ( node.hasAttribute('b-for') )
-            this.parse_for(node, changed);
-        if ( node.hasAttribute('b-base') )
-            this.parse_base(node, changed);
-        let i, tmp, nodes = node.childNodes;
-        for ( i = 0; i < nodes.length; i++ ) {
-            tmp = nodes[i];
-            if (
-                tmp instanceof Comment ||
-                tmp instanceof HTMLBRElement ||
-                tmp instanceof HTMLScriptElement
-            )
-                continue;
-            this.parse_node(tmp, changed);
-        }
-        if ( node.hasAttribute('b-model') )
-            this.parse_model(node);
     }
 
     parse_for(element, changed) {
@@ -202,43 +200,15 @@ bjs.Model = class Model {
                 tmp = property + item.getAttribute('b-field');
                 if ( changed && !tmp.startsWith(changed) && changed !== value )
                     continue;
-                let old;
                 if ( item.getAttribute('b-model') !== tmp ) {
                     old = item.getAttribute('b-model');
                     item.setAttribute('b-model', tmp);
+                    this.parse_attributes(item);
                 }
-                if ( changed )
-                    this.parse_model(item, old);
             } else {
                 item.removeAttribute('b-model');
-                this.parse_model(item);
+                this.parse_attributes(item);
             }
-        }
-    }
-
-    parse_model(element, old) {
-        let value = '', property = element.getAttribute('b-model');
-        if ( property !== null ) {
-            if ( old !== undefined )
-                this.unlink(element, old);
-            value = this.get(property);
-            if ( value === undefined )
-                value = '';
-            this.link(element, property);
-        } else
-            this.unlink(element);
-        if (
-            element instanceof HTMLInputElement ||
-            element instanceof HTMLButtonElement ||
-            element instanceof HTMLTextAreaElement ||
-            element instanceof HTMLSelectElement
-        ) {
-            if ( typeof value !== 'object' && element.value != value )
-                element.value = value;
-        } else {
-            value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
-            if ( element.textContent != value )
-                element.textContent = value;
         }
     }
 
@@ -316,13 +286,12 @@ bjs.Model.eventHander = function(event) {
         !(event.target instanceof HTMLSelectElement)
     )
         return;
-    let model = event.target.b_model,
-        property = event.target.getAttribute('b-model');
-    if ( model === undefined || property === null )
+    if ( event.target.b_attributes === undefined || event.target.b_attributes['b-model'] === undefined )
         return;
-    let value_old = model.get(property),
+    let b_model = event.target.b_attributes['b-model'],
+        value_old = b_model.get(),
         value_new = event.target.value;
     if ( value_old === value_new )
         return;
-    model.set(property, value_new);
+    b_model.set(value_new);
 }

@@ -4,18 +4,17 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 bjs.Expression = class Expression {
 
     constructor(string) {
-        bjs.expressions.push(this);
         this.expression = string;
         this.tree = this.parse(string.trim());
     }
 
-    eval(model, item) {
-        if ( item === undefined )
+    eval(model, item, property) {
+        if ( !item )
             item = this.tree;
         let value, tmp, number, type = typeof item;
         switch ( type ) {
             case 'string':
-                value = model.get(item);
+                value = property ? item : model.get(item);
                 break;
             case 'number':
                 value = item;
@@ -55,14 +54,21 @@ bjs.Expression = class Expression {
                         value = value[0];
                         break;
                     case 'value':
-                        value = this.eval(model, item.params[0]);
+                        value = this[property ? 'property' : 'eval'](model, item.params[0]);
                         break;
                     case 'property':
-                        value = this.eval(model, item.params[0]);
-                        value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
+                        if ( property ) {
+                            value = this.property(model, item.params[0]);
+                            value = value !== undefined ? value + '.' + item.params[1] : undefined;
+                        } else {
+                            value = this.eval(model, item.params[0]);
+                            value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
+                        }
                         break;
                     case 'index':
-                        value = model.get(item.params[0] + '.' + this.eval(model, item.params[1]));
+                        value = item.params[0] + '.' + this.eval(model, item.params[1]);
+                        if ( !property )
+                            value = model.get(value);
                         break;
                     case 'filter':
                         let params = [];
@@ -75,30 +81,33 @@ bjs.Expression = class Expression {
         return value;
     }
 
+    property(model, item) {
+        return this.eval(model, item, true);
+    }
+
     getLinks(item) {
         if ( item === undefined )
             item = this.tree;
-        let param, type, links = [];
-        for ( let i in item.params ) {
-            param = item.params[i];
-            type = typeof param;
-            switch ( type ) {
-                case 'number':
-                    break;
-                case 'string':
-                    if ( param.endsWith('.length') ) {
-                        links.push( param.substr(0, param.length - 7) );
-                        continue;
-                    }
-                    if ( param.endsWith('.keys') ) {
-                        links.push( param.substr(0, param.length - 5) );
-                        continue;
-                    }
-                    links.push( param );
-                    break;
-                default:
-                    links.push.apply( links, this.getLinks(param) );
-            }
+        let i, links = [], type = typeof item;
+        switch ( type ) {
+            case 'number':
+                break;
+            case 'string':
+                if ( item.endsWith('.length') )
+                    item = item.substr(0, item.length - 7);
+                if ( item.endsWith('.keys') )
+                    item = item.substr(0, item.length - 5);
+                links.push(item);
+                break;
+            default:
+                switch ( item.type ) {
+                    case 'property':
+                        links.push.apply(links, this.getLinks(item.params[0]));
+                        break;
+                    default:
+                        for ( i in item.params )
+                            links.push.apply(links, this.getLinks(item.params[i]));
+                }
         }
         return links;
     }
