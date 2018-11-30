@@ -100,7 +100,7 @@ bjs.Model = class Model {
             if ( node.b_attributes === undefined )
                 node.b_attributes = {};
             if ( bjs.attributes[attribute.name] !== undefined )
-                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute);
+                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute, this);
             else
                 node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
             links = node.b_attributes[attribute.name].getLinks();
@@ -201,7 +201,6 @@ bjs.Model = class Model {
                 if ( changed && !tmp.startsWith(changed) && changed !== value )
                     continue;
                 if ( item.getAttribute('b-model') !== tmp ) {
-                    old = item.getAttribute('b-model');
                     item.setAttribute('b-model', tmp);
                     this.parse_attributes(item);
                 }
@@ -219,15 +218,13 @@ bjs.Model = class Model {
         if ( element.b_links === undefined )
             element.b_links = new Set();
         element.b_links.add(property);
-        if ( element.b_model !== this )
-            element.b_model = this;
     }
 
     unlink(node, property) {
         if ( property === undefined ) {
-            if ( node.b_model !== undefined && node.b_links !== undefined )
+            if ( node.b_links !== undefined )
                 node.b_links.forEach(function(link) {
-                    node.b_model.unlink(node, link);
+                    this.unlink(node, link);
                 });
             let i, nodes = node.childNodes;
             for ( i = 0; i < nodes.length; i++ )
@@ -238,12 +235,8 @@ bjs.Model = class Model {
                 if ( this.links[property].size === 0 )
                     delete this.links[property];
             }
-            if ( node.b_links !== undefined ) {
+            if ( node.b_links !== undefined )
                 node.b_links.delete(property);
-                if ( node.b_links.size === 0 ) {
-                    delete node.b_model;
-                }
-            }
         }
     }
 

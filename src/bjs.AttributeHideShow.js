@@ -3,22 +3,18 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
 
-    constructor(node, attribute) {
-        super(node, attribute);
+    constructor(node, attribute, model) {
+        super(node, attribute, model);
         this.type = attribute.name;
     }
 
     eval() {
-        //if ( this.display === undefined )
-        //    this.display = this.node.style.display;
         if (
-            ( this.type == 'b-hide' && !this.expression.eval(this.node.b_model) ) ||
-            ( this.type == 'b-show' && this.expression.eval(this.node.b_model) )
-        ) {
-            //node.style.display = this.display;
-            //delete this.display;
+            ( this.type == 'b-hide' && !this.expression.eval(this.model) ) ||
+            ( this.type == 'b-show' && this.expression.eval(this.model) )
+        )
             this.node.style.display = '';
-        } else
+        else
             this.node.style.display = 'none';
     }
 

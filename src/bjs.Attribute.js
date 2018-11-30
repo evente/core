@@ -3,14 +3,15 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.Attribute = class Attribute {
 
-    constructor(node, attribute) {
+    constructor(node, attribute, model) {
         this.expression = new bjs.Expression(attribute.value);
         this.name = attribute.name;
         this.node = node;
+        this.model = model;
     }
 
     eval() {
-        this.node.setAttribute(this.name, this.expression.eval(this.node.b_model) || '');
+        this.node.setAttribute(this.name, this.expression.eval(this.model) || '');
     }
 
     getLinks() {

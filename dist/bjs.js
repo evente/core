@@ -107,13 +107,13 @@ bjs.__proto__.observe = function(mutations) {
         mutation = mutations[i];
         for ( j = 0; j < mutation.removedNodes.length; j++ ) {
             tmp = mutation.removedNodes[j];
-            model = tmp.b_model || bjs.getModel(tmp);
+            model = bjs.getModel(tmp);
             if ( model )
                 model.unlink(tmp);
         }
         for ( j = 0; j < mutation.addedNodes.length; j++ ) {
             tmp = mutation.addedNodes[j];
-            model = tmp.b_model || bjs.getModel(tmp);
+            model = bjs.getModel(tmp);
             if ( model )
                 model.parse_node(tmp);
         }
@@ -152,14 +152,15 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.Attribute = class Attribute {
 
-    constructor(node, attribute) {
+    constructor(node, attribute, model) {
         this.expression = new bjs.Expression(attribute.value);
         this.name = attribute.name;
         this.node = node;
+        this.model = model;
     }
 
     eval() {
-        this.node.setAttribute(this.name, this.expression.eval(this.node.b_model) || '');
+        this.node.setAttribute(this.name, this.expression.eval(this.model) || '');
     }
 
     getLinks() {
@@ -274,7 +275,7 @@ bjs.Model = class Model {
             if ( node.b_attributes === undefined )
                 node.b_attributes = {};
             if ( bjs.attributes[attribute.name] !== undefined )
-                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute);
+                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute, this);
             else
                 node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
             links = node.b_attributes[attribute.name].getLinks();
@@ -375,7 +376,6 @@ bjs.Model = class Model {
                 if ( changed && !tmp.startsWith(changed) && changed !== value )
                     continue;
                 if ( item.getAttribute('b-model') !== tmp ) {
-                    old = item.getAttribute('b-model');
                     item.setAttribute('b-model', tmp);
                     this.parse_attributes(item);
                 }
@@ -393,15 +393,13 @@ bjs.Model = class Model {
         if ( element.b_links === undefined )
             element.b_links = new Set();
         element.b_links.add(property);
-        if ( element.b_model !== this )
-            element.b_model = this;
     }
 
     unlink(node, property) {
         if ( property === undefined ) {
-            if ( node.b_model !== undefined && node.b_links !== undefined )
+            if ( node.b_links !== undefined )
                 node.b_links.forEach(function(link) {
-                    node.b_model.unlink(node, link);
+                    this.unlink(node, link);
                 });
             let i, nodes = node.childNodes;
             for ( i = 0; i < nodes.length; i++ )
@@ -412,12 +410,8 @@ bjs.Model = class Model {
                 if ( this.links[property].size === 0 )
                     delete this.links[property];
             }
-            if ( node.b_links !== undefined ) {
+            if ( node.b_links !== undefined )
                 node.b_links.delete(property);
-                if ( node.b_links.size === 0 ) {
-                    delete node.b_model;
-                }
-            }
         }
     }
 
@@ -503,22 +497,18 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
 
-    constructor(node, attribute) {
-        super(node, attribute);
+    constructor(node, attribute, model) {
+        super(node, attribute, model);
         this.type = attribute.name;
     }
 
     eval() {
-        //if ( this.display === undefined )
-        //    this.display = this.node.style.display;
         if (
-            ( this.type == 'b-hide' && !this.expression.eval(this.node.b_model) ) ||
-            ( this.type == 'b-show' && this.expression.eval(this.node.b_model) )
-        ) {
-            //node.style.display = this.display;
-            //delete this.display;
+            ( this.type == 'b-hide' && !this.expression.eval(this.model) ) ||
+            ( this.type == 'b-show' && this.expression.eval(this.model) )
+        )
             this.node.style.display = '';
-        } else
+        else
             this.node.style.display = 'none';
     }
 
@@ -531,12 +521,12 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
 
-    constructor(node, attribute) {
-        super(node, attribute);
+    constructor(node, attribute, model) {
+        super(node, attribute, model);
     }
 
     eval() {
-        let value = this.expression.eval(this.node.b_model) || '';
+        let value = this.expression.eval(this.model) || '';
         if (
             this.node instanceof HTMLInputElement ||
             this.node instanceof HTMLButtonElement ||
@@ -553,11 +543,11 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
     }
 
     get() {
-        return this.expression.eval(this.node.b_model) || '';
+        return this.expression.eval(this.model) || '';
     }
 
     set(value) {
-        this.node.b_model.set(this.expression.property(this.node.b_model), value);
+        this.model.set(this.expression.property(this.model), value);
     }
 
 };
