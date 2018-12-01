@@ -7,7 +7,7 @@ describe('App class', () => {
 
     test('App object creation', () => {
         let app = new bjs.App('body');
-        expect(app.selector).toHaveLength(1);
+        expect(app.model.selector).toHaveLength(1);
     });
 
     test('Add route', () => {

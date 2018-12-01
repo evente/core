@@ -1,15 +1,17 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
 
-bjs.App = class App extends bjs.Model {
+bjs.App = class App {
 
-    constructor(selector, model, options) {
-        super(selector, model);
-        this.options = Object.assign({
-            router: true,
-        }, options);
-        if ( this.options.router )
-            this.router = new bjs.Router(this.selector);
+    constructor(selector, data, options) {
+        options = {router: true, ...options};
+        this.model = new bjs.Model(selector, data, {init: false});
+        if ( options.router )
+            this.router = new bjs.Router(this.model.selector);
+    }
+
+    get data() {
+        return this.model.data;
     }
 
     route(route, callback, params) {
@@ -22,6 +24,7 @@ bjs.App = class App extends bjs.Model {
     }
 
     run() {
+        this.model.init();
         if ( this.router )
             this.router.trigger();
     }

@@ -1,15 +1,21 @@
 let fs = require('fs');
-let babelMinify = require('babel-minify');
-let babelMinifyOptions = {
-    dead_code: true,
-    drop_console: true,
-    global_defs: {
-        process: {
-            env: {
-                NODE_ENV: "production"
+let uglify = require("uglify-es");
+let uglifyOptions = {
+    ecma: 8,
+    compress: {
+        drop_console: true,
+        unsafe_arrows: true,
+        unsafe_math: true,
+        unsafe_methods: true,
+        unsafe_undefined: true,
+        global_defs: {
+            process: {
+                env: {
+                    NODE_ENV: "production"
+                }
             }
-        }
-    }
+        },
+    },
 }
 
 let inputDir = 'src/';
@@ -21,13 +27,13 @@ let inputFiles = [
     // Order has matter
     'bjs.js',
     'bjs.Attribute.js',
-    'bjs.Model.js',
     // Order has no matter - ordered by name
     'bjs.App.js',
     'bjs.AttributeHideShow.js',
     'bjs.AttributeModel.js',
     'bjs.Expression.js',
     //'bjs.Fetch.js',
+    'bjs.Model.js',
     'bjs.ModelProxyHandler.js',
     'bjs.Resource.js',
     'bjs.Router.js',
@@ -42,7 +48,7 @@ function minify() {
     });
     try {
         fs.writeFileSync(outputFile, inputCode);
-        let outputCode = babelMinify(inputCode, babelMinifyOptions);
+        let outputCode = uglify.minify(inputCode, uglifyOptions).code;
         fs.writeFileSync(outputFileMinified, outputCode);
         console.log('Rebuild done!');
     } catch (e) {

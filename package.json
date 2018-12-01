@@ -12,11 +12,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "babel-minify": "^0.1.12",
-    "babel-plugin-transform-inline-environment-variables": "^0.1.1",
     "codeclimate-test-reporter": "^0.5.1",
-    "jest": "^20.0.4",
-    "node-watch": "^0.5.5"
+    "jest": "^23.6.0",
+    "uglify-es": "^3.3.9"
   },
   "jest": {
     "collectCoverage": true,

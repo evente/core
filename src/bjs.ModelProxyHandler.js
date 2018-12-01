@@ -9,6 +9,11 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
 
     deleteProperty(target, prop) {
         let data = this.model.shadow.getProperty(target.$);
+        let listeners = this.model.listeners.delete[target.$];
+        if ( listeners ) {
+            for ( let listener of listeners )
+                listener(data, target.$, prop);
+        }
         delete data[prop];
         let property = ( target.$ ? target.$ + '.' : '' ) + prop,
             elements = this.model.get_elements(property),
@@ -23,11 +28,6 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         return true;
     }
 
-    enumerate(target) {
-        let data = this.model.shadow.getProperty(target.$);
-        return Object.keys(data)[Symbol.iterator]();
-    }
-
     get(target, prop) {
         if ( prop === 'constructor' )
             return { name: 'Proxy' };
@@ -35,26 +35,26 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         switch ( prop ) {
             case 'keys':
                 return Object.keys(data);
-            break;
             case 'length':
                 return Object.keys(data).length;
-            break;
             case 'toJSON':
                 return function() { return data; };
-            break;
         }
-        if ( data[prop] === undefined )
+        let listeners = this.model.listeners.get[target.$];
+        if ( listeners ) {
+            for ( let listener of listeners )
+                listener(data, target.$, prop);
+        }
+        if ( data[prop] === undefined || data[prop] === null )
             return;
-        if ( data[prop] !== null ) {
-            switch ( typeof data[prop] ) {
-                case 'object':
-                    return new Proxy(
-                        { $: ( target.$ ? target.$ + '.' : '' ) + prop },
-                        this.model.proxyHandler
-                    );
-                default:
-                    return data[prop];
-            }
+        switch ( typeof data[prop] ) {
+            case 'object':
+                return new Proxy(
+                    { $: ( target.$ ? target.$ + '.' : '' ) + prop },
+                    this.model.proxyHandler
+                );
+            default:
+                return data[prop];
         }
     }
 
@@ -80,7 +80,12 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
     }
 
     set(target, prop, value) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getProperty(target.$),
+            listeners = this.model.listeners.set[target.$];
+        if ( listeners ) {
+            for ( let listener of listeners )
+                listener(data, target.$, prop, value);
+        }
         if ( data[prop] !== value ) {
             data[prop] = value;
             let property = ( target.$ ? target.$ + '.' : '' ) + prop,

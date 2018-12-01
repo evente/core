@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const watch = require('node-watch');
 const minify = require('../bin/minify.js');
 
 const hostname = '127.0.0.1';
@@ -12,10 +11,7 @@ const srcDir = 'src/';
 const buildDir = 'dist/';
 
 console.log('Watching ' + watchDir + ' for changes...');
-watch(watchDir, { recursive: true }, function(evt, name) {
-    console.log('%s changed, rebuild started...', name);
-    minify();
-});
+watch(watchDir);
 
 http.createServer((req, res) => {
     let dir = path.dirname(req.url);
@@ -40,3 +36,15 @@ http.createServer((req, res) => {
 }).listen(port, hostname, () => {
     console.log('Listening on http://%s:%d', hostname, port);
 });
+
+function watch(path) {
+    fs.watch(path, { recursive: true }, function(event) {
+        console.log('Watch event:', event, path, ', rebuild started...');
+        setTimeout(minify, 200);
+    });
+    if ( process.platform === 'freebsd' && fs.statSync(path).isDirectory() ) {
+        fs.readdirSync(path).forEach(file => {
+            watch(path + '/' + file);
+        });
+    }
+}

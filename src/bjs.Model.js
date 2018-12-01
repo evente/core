@@ -3,16 +3,17 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.Model = class Model {
 
-    constructor(selector, data) {
-        if ( data )
-            data.strings = bjs.strings;
+    constructor(selector, data, options) {
+        options = { init: true, ...options };
         bjs.models.push(this);
         this.proxyHandler = new bjs.ModelProxyHandler(this);
-        this.shadow = data || { strings: bjs.strings };
+        this.shadow = { ...data, strings: bjs.strings };
         this.proxy = new Proxy({$: ''}, this.proxyHandler);
+        this.listeners = { get: {}, set: {}, delete: {} };
         this.links = {};
         this.selector = new bjs.Selector(selector);
-        this.init();
+        if ( options.init )
+            this.init();
     }
 
     get data() {
@@ -38,9 +39,24 @@ bjs.Model = class Model {
         let i, element;
         for ( i in this.selector ) {
             element = this.selector.get(i);
-            element.addEventListener('change', bjs.Model.eventHander, true);
-            element.addEventListener('keyup', bjs.Model.eventHander, true);
+            element.addEventListener('input', bjs.Model.eventHander, true);
             this.parse_node(element);
+        }
+    }
+
+    addListener(event, property, listener) {
+        if ( !this.listeners[event] )
+            return;
+        if ( !this.listeners[event][property] )
+            this.listeners[event][property] = new Set();
+        this.listeners[event][property].add(listener);
+    }
+
+    removeListener(event, property, listener) {
+        if ( this.listeners[event] && this.listeners[event][property] ) {
+            this.listeners[event][property].delete(listener);
+            if ( !this.listeners[event][property].size )
+                delete this.listeners[event][property];
         }
     }
 

@@ -41,7 +41,7 @@ describe('Model class', () => {
         let model = new bjs.Model('body', { form: {} });
         let element = document.getElementById('model');
         element.value = 'text';
-        let event = new Event('change');
+        let event = new Event('input');
         element.dispatchEvent(event);
         expect(model.get('form.text')).toBe('text');
     });
