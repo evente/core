@@ -3,15 +3,15 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
 
-    constructor(node, attribute, model) {
-        super(node, attribute, model);
-        this.type = attribute.name;
+    constructor(node, name, model) {
+        super(node, name, model);
+        this.type = name;
     }
 
-    eval() {
+    apply() {
         if (
-            ( this.type == 'b-hide' && !this.expression.eval(this.model) ) ||
-            ( this.type == 'b-show' && this.expression.eval(this.model) )
+            ( this.type == 'b-hide' && !this.eval(this.model) ) ||
+            ( this.type == 'b-show' && this.eval(this.model) )
         )
             this.node.style.display = '';
         else

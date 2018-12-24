@@ -9,10 +9,10 @@ bjs.Selector = class Selector extends Array {
             switch (options.constructor.name) {
                 case 'String':
                     if ( options.length > 0 )
-                        bjs.Selector.prototype.push.apply(this, document.querySelectorAll(options));
+                        this.push(...document.querySelectorAll(options));
                 break;
                 case 'Array':
-                    bjs.Selector.prototype.push.apply(this, options);
+                    this.push(...options);
                 break;
                 default:
                     if ( options instanceof HTMLElement )
@@ -172,7 +172,7 @@ bjs.Selector = class Selector extends Array {
                         return true;
                 break;
                 case 'find':
-                    Array.prototype.push.apply(result, this[i].querySelectorAll(options.selector));
+                    result.push(...this[i].querySelectorAll(options.selector));
                 break;
                 case 'html':    result.push(this[i].innerHTML);     break;
                 case 'hasClass':

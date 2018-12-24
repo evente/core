@@ -70,11 +70,11 @@ bjs.Expression = class Expression {
                         if ( !property )
                             value = model.get(value);
                         break;
-                    case 'filter':
+                    case 'pipe':
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
-                        value = bjs.filters[item.name](params);
+                        value = bjs.pipes[item.name](params);
                         break;
                 }
         }
@@ -102,11 +102,11 @@ bjs.Expression = class Expression {
             default:
                 switch ( item.type ) {
                     case 'property':
-                        links.push.apply(links, this.getLinks(item.params[0]));
+                        links.push(...this.getLinks(item.params[0]));
                         break;
                     default:
                         for ( i in item.params )
-                            links.push.apply(links, this.getLinks(item.params[i]));
+                            links.push(...this.getLinks(item.params[i]));
                 }
         }
         return links;
@@ -269,7 +269,7 @@ bjs.Expression = class Expression {
                 case '|':
                     if ( item.type !== undefined )
                         item = { params: [ item ] };
-                    item.type = 'filter';
+                    item.type = 'pipe';
                     item.name = tokens.shift();
                     token = tokens.shift();
                     while ( token === ':' ) {
@@ -318,5 +318,5 @@ bjs.Expression.operations = {
     '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
     '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
     '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
-    'filter': { priority: 4 },
+    'pipe': { priority: 4 },
 };

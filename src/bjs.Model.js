@@ -24,7 +24,7 @@ bjs.Model = class Model {
         value.strings = bjs.strings;
         this.shadow = value;
         for ( let i in this.selector )
-            this.parse_node(this.selector.get(i), '');
+            this.parseNode(this.selector.get(i), '');
     }
 
     get(property) {
@@ -40,7 +40,7 @@ bjs.Model = class Model {
         for ( i in this.selector ) {
             element = this.selector.get(i);
             element.addEventListener('input', bjs.Model.eventHander, true);
-            this.parse_node(element);
+            this.parseNode(element);
         }
     }
 
@@ -60,188 +60,150 @@ bjs.Model = class Model {
         }
     }
 
-    apply_attributes(node) {
-        if ( node instanceof Text && node.b_expression !== undefined )
-            node.nodeValue = node.b_expression.eval(this);
+    applyAttributes(node) {
         if ( node.b_attributes === undefined )
             return;
-        for ( let i in node.b_attributes ) {
-            if ( bjs.attributes[i] !== undefined )
-                node.b_attributes[i].eval();
-            else
-                node.setAttribute(i, node.b_attributes[i].eval(this));
+        if ( node instanceof Text ) {
+            let value = node.b_attributes[''].eval(this);
+            value = value !== undefined ? value.toString() : '';
+            if ( node.nodeValue !== value )
+                node.nodeValue = value;
+            return;
         }
+        let name, attribute;
+        for ( name in node.b_attributes )
+            this.applyAttribute(node, name);
     }
 
-    get_elements(link) {
-        let i, elements = new Set();
+    applyAttribute(node, name) {
+        if ( node.b_attributes === undefined || node.b_attributes[name] === undefined )
+            return;
+        node.b_attributes[name].apply();
+    }
+
+    getNodes(link) {
+        let i, node, nodes = new Set();
         for ( i in this.links ) {
             if ( !i.startsWith(link + '.') )
                 continue;
-            this.links[i].forEach(function(element) {
-                elements.add(element);
-            });
+            for ( node of this.links[i] )
+                nodes.add(node);
         }
         while ( link != '' ) {
-            if ( this.links[link] !== undefined )
-                this.links[link].forEach(function(element) {
-                    elements.add(element);
-                });
+            if ( this.links[link] !== undefined ) {
+                for ( node of this.links[link] )
+                    nodes.add(node);
+            }
             link = link.split('.').slice(0, -1).join('.');
         }
-        return elements;
+        return nodes;
     }
 
-    parse_attributes(node) {
+    parseNode(node) {
+        this.parseAttributes(node);
+        if ( node instanceof Text ) {
+            this.applyAttributes(node);
+            return;
+        }
+        let i, item, items = node.childNodes;
+        for ( i = 0; i < items.length; i++ ) {
+            item = items[i];
+            if (
+                item instanceof Comment ||
+                item instanceof HTMLBRElement ||
+                item instanceof HTMLScriptElement
+            )
+                continue;
+            this.parseNode(item);
+        }
+        this.applyAttributes(node);
+    }
+
+    parseAttributes(node) {
         if ( node instanceof Text ) {
             if ( node.nodeValue.indexOf('{{') !== -1 ) {
-                node.b_expression = new bjs.Expression(node.nodeValue);
-                let i, links = node.b_expression.getLinks();
-                for ( i in links )
-                    this.link(node, links[i]);
-                this.apply_attributes(node);
+                node.b_attributes = { '': new bjs.Expression(node.nodeValue) };
+                this.updateLinks(node);
+            } else {
+                if ( node.b_attributes === undefined )
+                    delete node.b_attributes;
             }
             return;
         }
-        let i, j, links, attribute, attributes = node.attributes;
-        for ( i = 0; i < attributes.length; i++ ) {
-            attribute = {
-                name: attributes[i].name,
-                value: attributes[i].value
-            };
-            if ( bjs.attributes[attribute.name] !== undefined )
-                attribute.value = bjs.attributes[attribute.name].check(node, attribute.name);
-            if (attribute.value.indexOf('{{') === -1)
-                continue;
-            if ( node.b_attributes === undefined )
-                node.b_attributes = {};
-            if ( bjs.attributes[attribute.name] !== undefined )
-                node.b_attributes[attribute.name] = new bjs.attributes[attribute.name](node, attribute, this);
-            else
-                node.b_attributes[attribute.name] = new bjs.Expression(attribute.value);
-            links = node.b_attributes[attribute.name].getLinks();
-            for ( j in links )
-                this.link(node, links[j]);
+        let i, attribute, attributes = bjs.getAttributes();
+        for ( i in attributes )
+            this.parseAttribute(node, attributes[i].name);
+        for ( i = 0; i < node.attributes.length; i++ ) {
+            attribute = node.attributes[i];
+            if ( bjs.attributes[attribute.name] === undefined )
+                this.parseAttribute(node, attribute.name);
         }
-        this.apply_attributes(node);
+        if ( node.b_attributes )
+            this.updateLinks(node);
     }
 
-    parse_node(node, changed) {
-        if ( !(node instanceof Text) ) {
-            if ( node.hasAttribute('b-for') )
-                this.parse_for(node, changed);
-            if ( node.hasAttribute('b-base') )
-                this.parse_base(node, changed);
-            let i, tmp, nodes = node.childNodes;
-            for ( i = 0; i < nodes.length; i++ ) {
-                tmp = nodes[i];
-                if (
-                    tmp instanceof Comment ||
-                    tmp instanceof HTMLBRElement ||
-                    tmp instanceof HTMLScriptElement
-                )
-                    continue;
-                this.parse_node(tmp, changed);
-            }
+    parseAttribute(node, name) {
+        let value, tmp = node.attributes[name];
+        if ( !tmp ) {
+            if ( node.b_attributes )
+                delete node.b_attributes[name];
+            return;
         }
-        if ( changed !== undefined )
-            this.apply_attributes(node);
-        else
-            this.parse_attributes(node);
+        if ( node.b_attributes && node.b_attributes[name] ) {
+            let expression = '{{' + node.b_attributes[name].expression  + '}}';
+            if ( expression === tmp.value )
+                return;
+        }
+        if ( bjs.attributes[name] ) {
+            value = bjs.attributes[name].check(node, name);
+            if ( tmp.value !== value )
+                tmp.value = value;
+            tmp = new bjs.attributes[name](node, name, this);
+        } else {
+            if (tmp.value.indexOf('{{') === -1)
+                return;
+            if ( bjs.attributes[name] === undefined )
+                tmp = new bjs.Attribute(node, name, this);
+        }
+        if ( node.b_attributes === undefined )
+            node.b_attributes = {};
+        node.b_attributes[name] = tmp;
     }
 
-    parse_for(element, changed) {
-        let property, key, as, items, value, child;
-        if ( element.b_template === undefined ) {
-            element.b_template = element.children[0];
-            element.b_template.remove();
+    updateLinks(node) {
+        var i, j, tmp,
+            set = new Set();
+        for ( i in node.b_attributes ) {
+            tmp = node.b_attributes[i].getLinks();
+            for ( j in tmp )
+                set.add(tmp[j]);
         }
-        property = element.getAttribute('b-for');
-        this.link(element, property);
-        as = element.getAttribute('b-as') || '_';
-        key = element.getAttribute('b-key');
-        items = this.get(property);
-        for ( let i in items ) {
-            value = items[i][key];
-            if ( changed !== undefined && !(property + '.' + value).startsWith(changed) )
-                continue;
-            child = element.querySelector('[b-base="' + property + '.' + value + '"]');
-            if ( !child ) {
-                child = element.b_template.cloneNode(true);
-                child.b_for = property + '.' + value;
-                child.b_key = value;
-                child.setAttribute('b-base', child.b_for);
-                this.replace_local(child, as, child.b_for);
-                element.appendChild(child);
-            }
-            if ( changed !== undefined )
-                this.parse_base(child, changed);
+        tmp = node.b_links || new Set();
+        for ( i of tmp ) {
+            if ( !set.has(i) )
+                this.unlink(node, i)
         }
-        if ( changed !== undefined && property.startsWith(changed) ) {
-            let i, remove = [];
-            for ( i = 0; i < element.childNodes.length; i++ ) {
-                child = element.childNodes[i];
-                key = child.b_key !== undefined ? child.b_key : '';
-                if (
-                    items === undefined ||
-                    ( items[key] === undefined && child.b_for !== undefined && child.b_for === property + '.' + key )
-                )
-                    remove.push(child);
-            }
-            for ( i in remove )
-                remove[i].remove();
+        for ( i of set ) {
+            if ( !tmp.has(i) )
+                this.link(node, i);
         }
     }
 
-    parse_base(element, changed) {
-        let base, key, value, property, clear = false, tmp, items, item;
-        base = property = element.getAttribute('b-base');
-        this.link(element, property);
-        value = element.getAttribute('b-key');
-        if ( value !== null ) {
-            this.link(element, value);
-            tmp = this.get(value);
-            if ( tmp !== undefined && this.get(property + '.' + tmp) !== undefined )
-                property += '.' + tmp;
-            else
-                property = '';
-        }
-        property += '.';
-        items = Array.prototype.slice.call(element.querySelectorAll('[b-field]'));
-        if ( element.hasAttribute('b-field') )
-            items.push(element);
-        for ( let i in items ) {
-            item = items[i];
-            if ( property !== '.' ) {
-                tmp = property + item.getAttribute('b-field');
-                if ( changed && !tmp.startsWith(changed) && changed !== value )
-                    continue;
-                if ( item.getAttribute('b-model') !== tmp ) {
-                    item.setAttribute('b-model', tmp);
-                    this.parse_attributes(item);
-                }
-            } else {
-                item.removeAttribute('b-model');
-                this.parse_attributes(item);
-            }
-        }
-    }
-
-    link(element, property) {
+    link(node, property) {
         if ( this.links[property] === undefined )
             this.links[property] = new Set();
-        this.links[property].add(element);
-        if ( element.b_links === undefined )
-            element.b_links = new Set();
-        element.b_links.add(property);
+        this.links[property].add(node);
+        if ( node.b_links === undefined )
+            node.b_links = new Set();
+        node.b_links.add(property);
     }
 
     unlink(node, property) {
         if ( property === undefined ) {
-            if ( node.b_links !== undefined )
-                node.b_links.forEach(function(link) {
+            if ( node.b_links !== undefined ) {
+                for ( let link of node.b_links )
                     this.unlink(node, link);
-                });
+            }
             let i, nodes = node.childNodes;
             for ( i = 0; i < nodes.length; i++ )
                 this.unlink(nodes[i]);
@@ -251,37 +213,11 @@ bjs.Model = class Model {
                 if ( this.links[property].size === 0 )
                     delete this.links[property];
             }
-            if ( node.b_links !== undefined )
+            if ( node.b_links !== undefined ) {
                 node.b_links.delete(property);
-        }
-    }
-
-    replace_local(node, local, base) {
-        let regexp = new RegExp('({{.*?)' + local.replace('.', '\.') + '([ .}+\\-*/|=#&?])', 'gim');
-        if ( node instanceof Text ) {
-            if ( node.nodeValue.match(regexp) )
-                node.nodeValue = node.nodeValue.replace(regexp, '$1' + base + '$2');
-            return;
-        }
-        let i, nodes, tmp, attribute,
-            attributes = node.attributes;
-        for ( i = 0; i < attributes.length; i++ ) {
-            attribute = attributes[i];
-            if ( bjs.attributes[attribute.name] !== undefined )
-                bjs.attributes[attribute.name].check(node, attribute.name);
-            if ( attribute.value.match(regexp) )
-                node.setAttribute(attribute.name, attribute.value.replace(regexp, '$1' + base + '$2'));
-        }
-        nodes = node.childNodes;
-        for ( i = 0; i < nodes.length; i++ ) {
-            tmp = nodes[i];
-            if (
-                tmp instanceof Comment ||
-                tmp instanceof HTMLBRElement ||
-                tmp instanceof HTMLScriptElement
-            )
-                continue;
-            this.replace_local(tmp, local, base);
+                if ( node.b_links.size === 0 )
+                    delete node.b_links;
+            }
         }
     }
 

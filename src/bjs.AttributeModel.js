@@ -3,12 +3,12 @@ if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
 
 bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
 
-    constructor(node, attribute, model) {
-        super(node, attribute, model);
+    constructor(node, name, model) {
+        super(node, name, model);
     }
 
-    eval() {
-        let value = this.expression.eval(this.model) || '';
+    apply() {
+        let value = this.eval(this.model) || '';
         if (
             this.node instanceof HTMLInputElement ||
             this.node instanceof HTMLButtonElement ||
@@ -16,20 +16,20 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
             this.node instanceof HTMLSelectElement
         ) {
             if ( typeof value !== 'object' && this.node.value != value )
-            this.node.value = value;
+                this.node.value = value;
         } else {
             value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
             if ( this.node.textContent != value )
-            this.node.textContent = value;
+                this.node.textContent = value;
         }
     }
 
     get() {
-        return this.expression.eval(this.model) || '';
+        return this.eval(this.model) || '';
     }
 
     set(value) {
-        this.model.set(this.expression.property(this.model), value);
+        this.model.set(this.property(this.model), value);
     }
 
 };

@@ -8,22 +8,22 @@
         <h1 b-model="items"></h1>
         <div>
             <label>Current item id</label>
-            <select b-for="items" b-as="item" b-key="id" b-model="item_id">
+            <select b-for="item in items key id" b-model="item_id">
                 <option value="{{item.id}}">{{item.name}} ({{item.id}})</option>
             </select>
             <input type="number" b-model="item_id" min="0" max="{{ items.keys | max }}">
         </div>
-        <div b-base="items" b-key="item_id" b-show="items[item_id]">
-            <label>id</label>   <span b-field="id"></span>           <br>
-            <label>name</label> <input b-field="name">               <br>
-            <label>desc</label> <textarea b-field="desc"></textarea> <br>
+        <div b-base="items[item_id] as item" b-show="items[item_id]">
+            <label>id</label>   <span>{{item.id}}</span>                  <br>
+            <label>name</label> <input b-model="item.name">               <br>
+            <label>desc</label> <textarea b-model="item.desc"></textarea> <br>
         </div>
         <h2>Items count: {{items.length}}, id range: {{items.keys | min}}...{{items.keys | max}}</h2>
-        <div style="padding-left: {{10 * item_id}}px;" b-for="items" b-as="item" b-key="id">
+        <div style="padding-left: {{10 * item_id}}px;" b-for="item in items key id">
             <a href="/items/{{item.id}}" style="display: block;">
                 id: {{item.id}}
-                name: <span b-field="name"></span>
-                desc: <span b-field="desc"></span>
+                name: {{item.name}}
+                desc: {{item.desc}}
             </a>
         </div>
         <script src="/dist/bjs.min.js"></script>

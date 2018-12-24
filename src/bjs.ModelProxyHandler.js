@@ -16,15 +16,9 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         }
         delete data[prop];
         let property = ( target.$ ? target.$ + '.' : '' ) + prop,
-            elements = this.model.get_elements(property),
-            model = this.model;
-        elements.forEach(function(element) {
-            if ( element.b_for !== undefined && element.b_for === property ) {
-                element.remove();
-                return;
-            }
-            model.parse_node(element, property);
-        });
+            node, nodes = this.model.getNodes(property);
+        for ( node of nodes )
+            this.model.applyAttributes(node, property);
         return true;
     }
 
@@ -89,11 +83,9 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
         if ( data[prop] !== value ) {
             data[prop] = value;
             let property = ( target.$ ? target.$ + '.' : '' ) + prop,
-                elements = this.model.get_elements(property),
-                model = this.model;
-            elements.forEach(function(element) {
-                model.parse_node(element, property);
-            });
+                node, nodes = this.model.getNodes(property);
+            for ( node of nodes )
+                this.model.applyAttributes(node, property);
         }
         return true;
     }

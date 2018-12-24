@@ -3,14 +3,14 @@ const bjs = require('../bin/test.js');
 const html_model =
     '<!-- html -->' +
     '<h1 id="text">Items count is {{items.length}}!</h1>' +
-    '<select id="for" b-for="items" b-as="item" b-key="id">' +
+    '<select id="for" b-for="item in items key id">' +
     '   <option value="{{item.id}}">' +
     '      <!-- item id -->' +
     '      {{item.id}}' +
     '   </option>' +
     '</select>' +
-    '<div b-base="items" b-key="item_id">' +
-    '   <p id="base" b-field="id"></p>' +
+    '<div b-base="items[item_id] as item">' +
+    '   <p id="base">{{item.id}}</p>' +
     '</div>' +
     '<input id="model" b-model="form.text">';
 
@@ -60,7 +60,7 @@ describe('Model class', () => {
         expect(document.getElementById('for').children.length).toBe(1);
     });
 
-    test('Data linking in b-base and b-key', () => {
+    test('Data linking in b-base', () => {
         document.body.innerHTML = html_model;
         let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } }, item_id: 1 });
         expect(document.getElementById('base').textContent).toBe('1');
