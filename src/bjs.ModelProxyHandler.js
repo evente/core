@@ -33,6 +33,8 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
                 return Object.keys(data).length;
             case 'toJSON':
                 return function() { return data; };
+            case 'clone':
+                return function() { return {...data}; };
         }
         let listeners = this.model.listeners.get[target.$];
         if ( listeners ) {

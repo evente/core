@@ -26,6 +26,8 @@ bjs.Resource = class Resource {
 
     method(method, params, headers) {
         params = params || {};
+        if ( params.constructor.name === 'Proxy' )
+            params = params.clone();
         let url = this.url.replace(/\/:([-_0-9a-z]+)(\/|$)/ig, (match, param, end) => {
                 let tmp = params[param] || '';
                 delete params[param];

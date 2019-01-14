@@ -8,24 +8,28 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
     }
 
     apply() {
-        let value = this.eval(this.model) || '';
+        let value = this.eval(this.model);
+        if ( value !== undefined )
+            value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
+        else
+            value = '';
         if (
             this.node instanceof HTMLInputElement ||
             this.node instanceof HTMLButtonElement ||
             this.node instanceof HTMLTextAreaElement ||
             this.node instanceof HTMLSelectElement
         ) {
-            if ( typeof value !== 'object' && this.node.value != value )
+            if ( this.node.value != value )
                 this.node.value = value;
         } else {
-            value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
             if ( this.node.textContent != value )
                 this.node.textContent = value;
         }
     }
 
     get() {
-        return this.eval(this.model) || '';
+        let value = this.eval(this.model);
+        return value !== undefined ? value : '';
     }
 
     set(value) {

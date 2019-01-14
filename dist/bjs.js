@@ -725,24 +725,28 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
     }
 
     apply() {
-        let value = this.eval(this.model) || '';
+        let value = this.eval(this.model);
+        if ( value !== undefined )
+            value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
+        else
+            value = '';
         if (
             this.node instanceof HTMLInputElement ||
             this.node instanceof HTMLButtonElement ||
             this.node instanceof HTMLTextAreaElement ||
             this.node instanceof HTMLSelectElement
         ) {
-            if ( typeof value !== 'object' && this.node.value != value )
+            if ( this.node.value != value )
                 this.node.value = value;
         } else {
-            value = typeof value !== 'object' ? value.toString() : JSON.stringify(value);
             if ( this.node.textContent != value )
                 this.node.textContent = value;
         }
     }
 
     get() {
-        return this.eval(this.model) || '';
+        let value = this.eval(this.model);
+        return value !== undefined ? value : '';
     }
 
     set(value) {
@@ -845,7 +849,7 @@ bjs.Model = class Model {
         }
         while ( link != '' ) {
             if ( this.links[link] !== undefined ) {
-                for ( node in this.links[link] )
+                for ( node of this.links[link] )
                     nodes.add(node);
             }
             link = link.split('.').slice(0, -1).join('.');
@@ -1029,6 +1033,8 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
                 return Object.keys(data).length;
             case 'toJSON':
                 return function() { return data; };
+            case 'clone':
+                return function() { return {...data}; };
         }
         let listeners = this.model.listeners.get[target.$];
         if ( listeners ) {
@@ -1115,6 +1121,8 @@ bjs.Resource = class Resource {
 
     method(method, params, headers) {
         params = params || {};
+        if ( params.constructor.name === 'Proxy' )
+            params = params.clone();
         let url = this.url.replace(/\/:([-_0-9a-z]+)(\/|$)/ig, (match, param, end) => {
                 let tmp = params[param] || '';
                 delete params[param];
