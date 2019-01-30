@@ -72,12 +72,14 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
 
     ownKeys(target) {
         let data = this.model.shadow.getProperty(target.$);
-        return Reflect.ownKeys(data);
+        return Object.keys(data);
     }
 
     set(target, prop, value) {
         let data = this.model.shadow.getProperty(target.$),
             listeners = this.model.listeners.set[target.$];
+        if ( value.constructor.name === 'Proxy' )
+            value = value.clone();
         if ( listeners ) {
             for ( let listener of listeners )
                 listener(data, target.$, prop, value);

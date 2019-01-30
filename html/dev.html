@@ -14,7 +14,11 @@
             <input type="number" b-model="item_id" min="0" max="{{ items.keys | max }}">
         </div>
         <div b-base="items[item_id] as item" b-show="items[item_id]">
-            <label>id</label>   <span>{{item.id}}</span>                  <br>
+            <label>id</label> <span>{{item.id}}</span>                    <br>
+            <label>type</label>
+            <select b-for="type in types" b-model="item.type">
+                <option value="{{$index}}">{{$index}} - {{type}}</option>
+            </select>                                                     <br>
             <label>name</label> <input b-model="item.name">               <br>
             <label>desc</label> <textarea b-model="item.desc"></textarea> <br>
         </div>
@@ -47,11 +51,12 @@
         <script src="/src/bjs.Selector.js"></script>
         <script>
             let app = new bjs.App('body', {
+                types: [ 't0', 't1', 't2' ],
                 item_id: 1,
                 items: {
                     0: { id: 0, name: 'zero' },
                     1: { id: 1, name: 'one' },
-                    3: { id: 3 },
+                    3: { id: 3, type: 1 },
                 },
             });
             app.route('/items/:id', options => { app.data.item_id = options.id; });

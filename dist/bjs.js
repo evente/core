@@ -145,7 +145,7 @@ bjs.Expression = class Expression {
     }
 
     eval(model, item, property) {
-        if ( !item )
+        if ( item === undefined )
             item = this.tree;
         let value, tmp, number, type = typeof item;
         switch ( type ) {
@@ -640,19 +640,25 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
             property = this.property(this.model),
             items = this.eval(this.model);
         for ( i in items ) {
-            key = items[i][this.key];
+            key = this.key !== undefined ? items[i][this.key] : i;
             child = this.node.querySelector('[b-id="' + key + '"]');
+            if ( child && child.b_index !== i ) {
+                child.remove();
+                child = null;
+            }
             if ( !child ) {
                 child = this.template.cloneNode(true);
+                child.b_index = i;
                 child.setAttribute('b-id', key);
-                this.dealias(child, this.alias, property + '.' + key);
+                this.dealias(child, '\\$index', i);
+                this.dealias(child, this.alias, property + '.' + i);
                 this.node.appendChild(child);
                 this.model.parseNode(child);
             }
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
             child = this.node.childNodes[i];
-            if ( !child.getAttribute('b-id') || items === undefined || items[child.attributes['b-id'].value] === undefined )
+            if ( items === undefined || items[child.b_index] === undefined )
                 remove.push(child);
         }
         for ( i in remove ) {
@@ -1072,12 +1078,14 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
 
     ownKeys(target) {
         let data = this.model.shadow.getProperty(target.$);
-        return Reflect.ownKeys(data);
+        return Object.keys(data);
     }
 
     set(target, prop, value) {
         let data = this.model.shadow.getProperty(target.$),
             listeners = this.model.listeners.set[target.$];
+        if ( value.constructor.name === 'Proxy' )
+            value = value.clone();
         if ( listeners ) {
             for ( let listener of listeners )
                 listener(data, target.$, prop, value);

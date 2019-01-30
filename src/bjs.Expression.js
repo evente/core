@@ -9,7 +9,7 @@ bjs.Expression = class Expression {
     }
 
     eval(model, item, property) {
-        if ( !item )
+        if ( item === undefined )
             item = this.tree;
         let value, tmp, number, type = typeof item;
         switch ( type ) {
