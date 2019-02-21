@@ -186,10 +186,10 @@ bjs.Expression = class Expression {
     }
 
     parse_operations(string) {
-        string = string.replace(/&&/, '&');
-        string = string.replace(/\|\|/, '?');
-        string = string.replace(/==/, '=');
-        string = string.replace(/!=/, '#');
+        string = string.replace(/&&/g, '&');
+        string = string.replace(/\|\|/g, '?');
+        string = string.replace(/==/g, '=');
+        string = string.replace(/!=/g, '#');
         return string;
     }
 
@@ -318,5 +318,6 @@ bjs.Expression.operations = {
     '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
     '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
     '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
-    'pipe': { priority: 4 },
+    'property': { priority: 4 },
+    'pipe': { priority: 5 },
 };

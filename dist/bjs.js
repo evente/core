@@ -322,10 +322,10 @@ bjs.Expression = class Expression {
     }
 
     parse_operations(string) {
-        string = string.replace(/&&/, '&');
-        string = string.replace(/\|\|/, '?');
-        string = string.replace(/==/, '=');
-        string = string.replace(/!=/, '#');
+        string = string.replace(/&&/g, '&');
+        string = string.replace(/\|\|/g, '?');
+        string = string.replace(/==/g, '=');
+        string = string.replace(/!=/g, '#');
         return string;
     }
 
@@ -454,7 +454,8 @@ bjs.Expression.operations = {
     '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
     '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
     '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
-    'pipe': { priority: 4 },
+    'property': { priority: 4 },
+    'pipe': { priority: 5 },
 };
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var bjs = require('./bjs.js');
@@ -563,7 +564,7 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
     }
 
     dealias(node, alias, base) {
-        let value, regexp = new RegExp('({{.*?)' + alias.replace('.', '\.') + '([ .}+\\-*/|=#&?])', 'gim');
+        let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
             if ( node.b_base ) {
                 value = node.b_base.replace(regexp, '$1' + base + '$2');
@@ -641,7 +642,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
             items = this.eval(this.model);
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
-            child = this.node.querySelector('[b-id="' + key + '"]');
+            child = this.node.querySelector('[b-key="' + key + '"]');
             if ( child && child.b_index !== i ) {
                 child.remove();
                 child = null;
@@ -649,8 +650,9 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
             if ( !child ) {
                 child = this.template.cloneNode(true);
                 child.b_index = i;
-                child.setAttribute('b-id', key);
+                child.setAttribute('b-key', key);
                 this.dealias(child, '\\$index', i);
+                this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
                 this.node.appendChild(child);
                 this.model.parseNode(child);
@@ -668,7 +670,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
     }
 
     dealias(node, alias, base) {
-        let regexp = new RegExp('({{.*?)' + alias.replace('.', '\.') + '([ .}+\\-*/|=#&?])', 'gim');
+        let regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
             if ( node.nodeValue.match(regexp) )
                 node.nodeValue = node.nodeValue.replace(regexp, '$1' + base + '$2');

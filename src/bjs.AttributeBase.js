@@ -23,7 +23,7 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
     }
 
     dealias(node, alias, base) {
-        let value, regexp = new RegExp('({{.*?)' + alias.replace('.', '\.') + '([ .}+\\-*/|=#&?])', 'gim');
+        let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
             if ( node.b_base ) {
                 value = node.b_base.replace(regexp, '$1' + base + '$2');
