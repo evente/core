@@ -670,17 +670,20 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
     }
 
     dealias(node, alias, base) {
-        let regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
+        let replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
+            test = new RegExp('{{');
         if ( node instanceof Text ) {
-            if ( node.nodeValue.match(regexp) )
-                node.nodeValue = node.nodeValue.replace(regexp, '$1' + base + '$2');
+            if ( node.nodeValue.match(replace) )
+                node.nodeValue = node.nodeValue.replace(replace, '$1' + base + '$2');
             return;
         }
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( item.value.match(regexp) )
-                item.value = item.value.replace(regexp, '$1' + base + '$2');
+            if ( !bjs.attributes[item.name] && !item.value.match(test) )
+                continue;
+            if ( item.value.match(replace) )
+                item.value = item.value.replace(replace, '$1' + base + '$2');
         }
         items = node.childNodes;
         for ( i = 0; i < items.length; i++ ) {
