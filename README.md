@@ -1,8 +1,82 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/1dc23cb451f2d1f6dfbd/maintainability)](https://codeclimate.com/github/apoprotsky/bjs/maintainability)
-[![Issue Count](https://codeclimate.com/github/apoprotsky/bjs/badges/issue_count.svg)](https://codeclimate.com/github/apoprotsky/bjs)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1dc23cb451f2d1f6dfbd/test_coverage)](https://codeclimate.com/github/apoprotsky/bjs/test_coverage)
 [![Build Status](https://travis-ci.org/apoprotsky/bjs.svg?branch=master)](https://travis-ci.org/apoprotsky/bjs)
 
-# bjs
+`bjs` - javascript library for building reactive web applications. Library is suitable for writing web applications from scratch and also for using in existing applications. And it is very small - `21k minified` and `6.2k gzipped` so it cause very low impact on the time of application loading.
 
-JavaScript library for web applications with some features of jQuery and AngularJS
+# Features
+- `jQuery`-like objects with subset of well known methods: `addClass`, `attr`, `closest`, `contains`, `end`, `find`, `get`, `hasClass`, `html`, `is`, `parent`, `removeClass`, `text`, `toggleClass`, `val`
+- Custom listeners for `get`, `set` or `delete` operations with model properties
+- Two way data binding
+- Expressions with pipes for output modifications
+- Working with HTTP resources using `fetch` and `promise`s
+- Routing
+
+# Getting started
+Example application **Currency calculator**.
+Try it on [CodePen](https://codepen.io/apoprotsky/pen/XOpzxV). Full application code see below.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Currency calculator</title>
+    <style>
+        input, select, span { font-size: 16px; }
+        input, select { padding: 5px; margin-left: 5px; margin-top: 10px; width: 185px; }
+        span { margin-left: 5px; width: 200px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <h1>Currency calculator</h1>
+    <!-- Loading -->
+    <div b-hide="rates">
+        Loading data...
+    </div>
+    <!-- Calculator -->
+    <div b-show="rates" style="display: none;">
+        <input type="number" min="0" max="1000" placeholder="Amount" b-model="amount">
+        <select b-for="name in names" b-model="base">
+            <option value="{{ name }}">{{ name }}</option>
+        </select>
+        <br>
+        <span>{{ amount * rates[currency] / rates[base] | currency:precision }}</span>
+        <select b-for="name in names" b-model="currency">
+            <option value="{{ name }}">{{ name }}</option>
+        </select>
+        <br>
+        <span>Precision</span>
+        <input type="number" min="0" max="6" b-model="precision">
+    </div>
+
+    <!-- bjs library -->
+    <script src="https://cdn.jsdelivr.net/gh/apoprotsky/bjs/dist/bjs.min.js"></script>
+
+    <!-- Application code -->
+    <script>
+        // Pipes
+        bjs.pipes.currency = (params) => {
+            return parseFloat(params[0]).toFixed(params[1] !== undefined ? params[1] : 2);
+        }
+        // Init
+        var app = new bjs.App('body', {
+            amount: '1',
+            currency: 'USD',
+            precision: 2
+        });
+        // Run
+        app.run();
+        // Load data
+        var resource = new bjs.Resource('https://api.exchangeratesapi.io/latest');
+        resource.get().then(data => {
+            data.rates[data.base] = 1;
+            app.data.base = data.base;
+            app.data.rates = data.rates;
+            app.data.names = Object.keys(data.rates).sort();
+        });
+    </script>
+
+</body>
+</html>
+```

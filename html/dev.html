@@ -8,26 +8,26 @@
         <h1 b-model="items"></h1>
         <div>
             <label>Current item id</label>
-            <select b-for="item in items key id" b-model="item_id">
-                <option value="{{item.id}}">{{item.name}} ({{item.id}})</option>
+            <select b-for="item in items key id" b-model="index">
+                <option value="{{ $index }}">#{{ $index }} id: {{ $key }}, name: {{ item.name }}, type: {{ types[item.type] }}</option>
             </select>
-            <input type="number" b-model="item_id" min="0" max="{{ items.keys | max }}">
+            <input type="number" b-model="index" min="0" max="{{ items.keys | max }}">
         </div>
-        <div b-base="items[item_id] as item" b-show="items[item_id]">
-            <label>id</label> <span>{{item.id}}</span>                    <br>
+        <div b-base="items[index] as item" b-show="items[index]">
+            <label>id</label> <span>{{ item.id }}</span>                  <br>
             <label>type</label>
             <select b-for="type in types" b-model="item.type">
-                <option value="{{$index}}">{{$index}} - {{type}}</option>
+                <option value="{{ $index }}">{{ $index }} - {{ type }}</option>
             </select>                                                     <br>
             <label>name</label> <input b-model="item.name">               <br>
             <label>desc</label> <textarea b-model="item.desc"></textarea> <br>
         </div>
-        <h2>Items count: {{items.length}}, id range: {{items.keys | min}}...{{items.keys | max}}</h2>
-        <div style="padding-left: {{10 * item_id}}px;" b-for="item in items key id">
-            <a href="/items/{{item.id}}" style="display: block;">
-                id: {{item.id}}
-                name: {{item.name}}
-                desc: {{item.desc}}
+        <h2>Items count: {{items.length}}, id range: {{ items.keys | min }}...{{ items.keys | max }}</h2>
+        <div style="padding-left: {{ 10 * index }}px;" b-for="item in items key id">
+            <a href="/items/{{ $index }}" style="display: block;">
+                id: {{ item.id }}
+                name: {{ item.name }}
+                desc: {{ item.desc }}
             </a>
         </div>
         <!-- jQuery -->
@@ -52,14 +52,14 @@
         <script>
             let app = new bjs.App('body', {
                 types: [ 't0', 't1', 't2' ],
-                item_id: 1,
-                items: {
-                    0: { id: 0, name: 'zero' },
-                    1: { id: 1, name: 'one' },
-                    3: { id: 3, type: 1 },
-                },
+                index: 1,
+                items: [
+                    { id: 0, name: 'zero' },
+                    { id: 1, name: 'one' },
+                    { id: 3, type: 1 },
+                ],
             });
-            app.route('/items/:id', options => { app.data.item_id = options.id; });
+            app.route('/items/:id', options => { app.data.index = options.id; });
             app.run();
         </script>
     </body>

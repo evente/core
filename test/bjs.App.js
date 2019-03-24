@@ -1,4 +1,4 @@
-const bjs = require('../bin/test.js');
+var bjs = require('../bin/test.js');
 
 describe('App class', () => {
 

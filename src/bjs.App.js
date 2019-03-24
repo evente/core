@@ -5,8 +5,9 @@ bjs.App = class App {
 
     constructor(selector, data, options) {
         options = {
-            router: true,
             clean: true,
+            router: true,
+            run: false,
             ...options
         };
         this.model = new bjs.Model(selector, data, {init: false});
@@ -14,10 +15,16 @@ bjs.App = class App {
             this.clean();
         if ( options.router )
             this.router = new bjs.Router(this.model.selector);
+        if ( options.run )
+            this.run();
     }
 
     get data() {
         return this.model.data;
+    }
+
+    set data(value) {
+        this.model.data = value;
     }
 
     route(route, callback, params) {

@@ -1,4 +1,4 @@
-const bjs = require('../bin/test.js');
+var bjs = require('../bin/test.js');
 
 const html_attribute =
     '<div id="hide" b-hide="hide"></div>' +

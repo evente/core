@@ -53,6 +53,9 @@ bjs.Expression = class Expression {
                         }
                         value = value[0];
                         break;
+                    case '!':
+                        value = !this.eval(model, item.params[0]);
+                        break;
                     case 'value':
                         value = this[property ? 'property' : 'eval'](model, item.params[0]);
                         break;
@@ -236,15 +239,14 @@ bjs.Expression = class Expression {
                 case '?':
                 case '=':
                 case '#':
+                case '!':
                     if ( item.type === undefined ) {
                         item.type = token;
                         continue;
                     }
                     if ( item.type === token )
                         break;
-                    if ( bjs.Expression.operations[item.type].priority == bjs.Expression.operations[token].priority )
-                        item.params.push({ type: token, params: [item.params.pop(), this.parse_tree(tokens)] });
-                    if ( bjs.Expression.operations[item.type].priority > bjs.Expression.operations[token].priority )
+                    if ( bjs.Expression.operations[item.type].priority >= bjs.Expression.operations[token].priority )
                         item = { type: token, params: [ item ] };
                     if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
                         item.params.push(this.parse_tree(
@@ -260,7 +262,11 @@ bjs.Expression = class Expression {
                         item.type = 'value';
                     return item;
                 case '[':
-                    item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
+                    if ( item.type === undefined ) {
+                        item.type = 'index';
+                        item.params.push(this.parse_tree(tokens));
+                    } else
+                        item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
                     break;
                 case ']':
                     if ( item.type === undefined )
@@ -293,7 +299,7 @@ bjs.Expression = class Expression {
                             item.type = 'property';
                             item.params.push(token);
                         } else
-                            item.params.push( { type: 'property', params: [ item.params.pop(), token ] } );
+                            item = {type: 'property', params: [item, token]};
                     } else {
                         tmp = parseFloat(token);
                         if ( !isNaN(tmp) )
@@ -318,6 +324,7 @@ bjs.Expression.operations = {
     '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
     '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
     '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
-    'property': { priority: 4 },
-    'pipe': { priority: 5 },
+    '!': { priority: 4 },
+    'property': { priority: 5 },
+    'pipe': { priority: 6 },
 };

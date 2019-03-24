@@ -1,4 +1,4 @@
-const bjs = require('../bin/test.js');
+var bjs = require('../bin/test.js');
 
 document.body.innerHTML =
     '<div id="first" class="test test1">' +

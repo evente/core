@@ -1,9 +1,9 @@
-const bjs = require('../bin/test.js');
+var bjs = require('../bin/test.js');
 
 html_expression =
     '<div id="simple">{{ 2 * a + b - c }} = 1</div>' +
     '<div id="brackets">{{ 2 * (a + b) - c / 2 }}</div>' +
-    '<div id="booleans">{{ ( a || b ) && c }}</div>' +
+    '<div id="booleans">{{ ( a || b ) && c && !d }}</div>' +
     '<div id="index">{{ items[id + 1].name }}</div>' +
     '<div id="filter_if">{{ a == b | if:a + " is equal " + b }}</div>' +
     '<div id="filter_min_max">{{ numbers | min }}...{{ numbers | max }}</div>' +
@@ -26,7 +26,7 @@ describe('Expression class', () => {
 
     test('Booleans', () => {
         document.body.innerHTML = html_expression;
-        let model = new bjs.Model('body', {a: false, b: 2, c: 0});
+        let model = new bjs.Model('body', {a: false, b: 2, c: 1, d: {}});
         expect(document.getElementById('booleans').innerHTML).toBe("false");
     });
 
