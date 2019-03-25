@@ -1,9 +1,15 @@
 {
   "name": "bjs",
+  "version": "1.0.0",
+  "author": "Andrey Poprotsky",
   "license": "MIT",
+  "homepage": "https://github.com/apoprotsky/bjs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apoprotsky/bjs.git"
+    "url": "git+https://github.com/apoprotsky/bjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apoprotsky/bjs/issues"
   },
   "scripts": {
     "build": "node bin/build.js",
