@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
+rc.AttributeModel = class AttributeModel extends rc.Attribute {
 
     constructor(node, name, model) {
         super(node, name, model);
@@ -38,4 +38,4 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
 
 };
 
-bjs.attributes['b-model'] = bjs.AttributeModel;
+rc.attributes['b-model'] = rc.AttributeModel;

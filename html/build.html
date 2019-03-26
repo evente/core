@@ -2,37 +2,37 @@
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
-        <title>bjs</title>
+        <title>rc</title>
     </head>
     <body>
-        <h1 b-model="items"></h1>
+        <h1 rc-model="items"></h1>
         <div>
             <label>Current item id</label>
-            <select b-for="item in items key id" b-model="index">
+            <select rc-for="item in items key id" rc-model="index">
                 <option value="{{ $index }}">#{{ $index }}. id: {{ $key }}, name: {{ item.name }}, type: {{ types[item.type] }}</option>
             </select>
-            <input type="number" b-model="index" min="0" max="{{ items.keys | max }}">
+            <input type="number" rc-model="index" min="0" max="{{ items.keys | max }}">
         </div>
-        <div b-base="items[index] as item" b-show="items[index]">
+        <div rc-base="items[index] as item" rc-show="items[index]">
             <label>id</label> <span>{{ item.id }}</span>                  <br>
             <label>type</label>
-            <select b-for="type in types" b-model="item.type">
+            <select rc-for="type in types" rc-model="item.type">
                 <option value="{{ $index }}">{{ $index }} - {{ type }}</option>
             </select>                                                     <br>
-            <label>name</label> <input b-model="item.name">               <br>
-            <label>desc</label> <textarea b-model="item.desc"></textarea> <br>
+            <label>name</label> <input rc-model="item.name">               <br>
+            <label>desc</label> <textarea rc-model="item.desc"></textarea> <br>
         </div>
         <h2>Items count: {{items.length}}, id range: {{ items.keys | min }}...{{ items.keys | max }}</h2>
-        <div style="padding-left: {{ 10 * index }}px;" b-for="item in items key id">
+        <div style="padding-left: {{ 10 * index }}px;" rc-for="item in items key id">
             <a href="/items/{{ $index }}" style="display: block;">
                 id: {{ item.id }}
                 name: {{ item.name }}
                 desc: {{ item.desc }}
             </a>
         </div>
-        <script src="/dist/bjs.min.js"></script>
+        <script src="/dist/rc.min.js"></script>
         <script>
-            let app = new bjs.App('body', {
+            let app = new rc.App('body', {
                 types: [ 't0', 't1', 't2' ],
                 index: 1,
                 items: [

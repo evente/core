@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "author": "Andrey Poprotsky",
   "license": "MIT",
-  "homepage": "https://github.com/apoprotsky/bjs",
+  "homepage": "https://github.com/rc-js/core",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apoprotsky/bjs.git"
+    "url": "git+https://github.com/rc-js/core.git"
   },
   "bugs": {
-    "url": "https://github.com/apoprotsky/bjs/issues"
+    "url": "https://github.com/rc-js/core/issues"
   },
   "scripts": {
     "build": "node bin/build.js",
@@ -18,14 +18,13 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "codeclimate-test-reporter": "^0.5.1",
     "jest": "^24.5.0",
     "uglify-es": "^3.3.9"
   },
   "jest": {
     "collectCoverage": true,
     "testMatch": [
-      "**/test/*.js?(x)"
+      "**/test/*.js"
     ],
     "verbose": true
   }

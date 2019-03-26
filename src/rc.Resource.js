@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Resource = class Resource {
+rc.Resource = class Resource {
 
     constructor(url, type) {
         this.url = url;
@@ -33,7 +33,7 @@ bjs.Resource = class Resource {
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || bjs.Resource.headers) };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || rc.Resource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -70,4 +70,4 @@ bjs.Resource = class Resource {
 
 }
 
-bjs.Resource.headers = {};
+rc.Resource.headers = {};

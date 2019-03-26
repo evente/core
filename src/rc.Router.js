@@ -1,10 +1,10 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Router = class Router {
+rc.Router = class Router {
 
     constructor(selector) {
-        bjs.routers.push(this);
+        rc.routers.push(this);
         this.routes = {};
         this.selector = selector;
         this.init();
@@ -14,7 +14,7 @@ bjs.Router = class Router {
         let i, node;
         for ( i in this.selector ) {
             node = this.selector.get(i);
-            node.addEventListener('click', bjs.Router.eventHander, true);
+            node.addEventListener('click', rc.Router.eventHander, true);
         }
     }
 
@@ -89,14 +89,14 @@ bjs.Router = class Router {
 
 }
 
-bjs.Router.eventHander = function(event) {
+rc.Router.eventHander = function(event) {
     let target = event.target;
     while ( !(target instanceof HTMLAnchorElement) ) {
         target = target.parentNode;
         if ( target instanceof HTMLDocument )
             return;
     }
-    let router = bjs.getRouter(target);
+    let router = rc.getRouter(target);
     if ( !router )
         return;
     let route = target.getAttribute('href');

@@ -1,11 +1,12 @@
 language: node_js
 node_js:
   - "lts/*"
-addons:
-  code_climate:
-    repo_token: 463152bd2e69388dee05f432bb7ddebc863f6a22d197ebfe00b1ca0854f1cdcf
 install:
   - npm install
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
 script:
   - npm test
-  - codeclimate-test-reporter < coverage/lcov.info
+after_script:
+  - ./cc-test-reporter after-build --input-type lcov --exit-code $TRAVIS_TEST_RESULT

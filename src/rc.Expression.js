@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Expression = class Expression {
+rc.Expression = class Expression {
 
     constructor(string) {
         this.expression = string;
@@ -34,7 +34,7 @@ bjs.Expression = class Expression {
                                 if ( !isNaN(number) )
                                     tmp = number;
                             }
-                            value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
+                            value = value === undefined ? tmp : rc.Expression.operations[item.type].func(value, tmp);
                         }
                         break;
                     case '&':
@@ -49,7 +49,7 @@ bjs.Expression = class Expression {
                                 tmp = number;
                             value.push(tmp);
                             if ( value.length > 1 )
-                                value = [ bjs.Expression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ rc.Expression.operations[item.type].func(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -77,7 +77,7 @@ bjs.Expression = class Expression {
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
-                        value = bjs.pipes[item.name](params);
+                        value = rc.pipes[item.name](params);
                         break;
                 }
         }
@@ -141,7 +141,7 @@ bjs.Expression = class Expression {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos);
-                tmp_string += 'strings.' + bjs.getStringIndex(tmp) + ' + ';
+                tmp_string += 'strings.' + rc.getStringIndex(tmp) + ' + ';
                 pos = match.index;
             }
             tmp = match[0].substr(2, match[0].length - 4).trim();
@@ -153,7 +153,7 @@ bjs.Expression = class Expression {
         }
         tmp = string.substr(pos);
         if ( tmp.length )
-            tmp_string += 'strings.' + bjs.getStringIndex(tmp);
+            tmp_string += 'strings.' + rc.getStringIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
         if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
@@ -175,7 +175,7 @@ bjs.Expression = class Expression {
             } else {
                 if ( str.delim === match[0] ) {
                     str.string = string.substr(str.start, match.index - str.start);
-                    str.index = bjs.getStringIndex(str.string);
+                    str.index = rc.getStringIndex(str.string);
                     result += 'strings.' + str.index;
                     str.start = 0;
                 }
@@ -246,9 +246,9 @@ bjs.Expression = class Expression {
                     }
                     if ( item.type === token )
                         break;
-                    if ( bjs.Expression.operations[item.type].priority >= bjs.Expression.operations[token].priority )
+                    if ( rc.Expression.operations[item.type].priority >= rc.Expression.operations[token].priority )
                         item = { type: token, params: [ item ] };
-                    if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
+                    if ( rc.Expression.operations[item.type].priority < rc.Expression.operations[token].priority )
                         item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
@@ -315,7 +315,7 @@ bjs.Expression = class Expression {
 
 };
 
-bjs.Expression.operations = {
+rc.Expression.operations = {
     '+': { priority: 0, func: function(a, b) { return a + b; } },
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },

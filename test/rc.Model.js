@@ -1,4 +1,4 @@
-var bjs = require('../bin/test.js');
+var rc = require('../bin/test.js');
 
 const html_model =
     '<!-- html -->' +
@@ -19,26 +19,26 @@ describe('Model class', () => {
 
     test('Expressions in text nodes', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
+        let model = new rc.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
         expect(document.getElementById('text').textContent).toBe('Items count is 2!');
     });
 
     test('Model object creation', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { form: { text: 'text' } });
+        let model = new rc.Model('body', { form: { text: 'text' } });
         expect(document.getElementById('model').value).toBe('text');
     });
 
     test('Model change via variables', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { form: {} });
+        let model = new rc.Model('body', { form: {} });
         model.set('form.text', 'text');
         expect(document.getElementById('model').value).toBe('text');
     });
 
     test('Model change via DOM', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { form: {} });
+        let model = new rc.Model('body', { form: {} });
         let element = document.getElementById('model');
         element.value = 'text';
         let event = new Event('input');
@@ -48,13 +48,13 @@ describe('Model class', () => {
 
     test('Children creation in b-for', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
+        let model = new rc.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
         expect(document.getElementById('for').children.length).toBe(2);
     });
 
     test('Children delete in b-for', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
+        let model = new rc.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } } });
         expect(document.getElementById('for').children.length).toBe(2);
         delete model.data.items[3];
         expect(document.getElementById('for').children.length).toBe(1);
@@ -62,13 +62,13 @@ describe('Model class', () => {
 
     test('Data linking in b-base', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } }, item_id: 1 });
+        let model = new rc.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } }, item_id: 1 });
         expect(document.getElementById('base').textContent).toBe('1');
     });
 
     test('Linked data changing', () => {
         document.body.innerHTML = html_model;
-        let model = new bjs.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } }, item_id: 1 });
+        let model = new rc.Model('body', { items: { 1: { id: 1 }, 3: { id: 3 } }, item_id: 1 });
         model.data.item_id = 3;
         expect(document.getElementById('base').textContent).toBe('3');
     });

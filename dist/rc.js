@@ -38,15 +38,15 @@ Object.defineProperty(
         }
     }
 );
-var bjs = function(selector){
-    return new bjs.Selector(selector);
+var rc = function(selector){
+    return new rc.Selector(selector);
 }
 
-bjs.attributes = {};
-bjs.models = [];
-bjs.routers = [];
-bjs.strings = [];
-bjs.pipes = {
+rc.attributes = {};
+rc.models = [];
+rc.routers = [];
+rc.strings = [];
+rc.pipes = {
     empty: function(params) {
         return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
     },
@@ -65,25 +65,25 @@ bjs.pipes = {
         return values.sort();
     },
     reverse: function(params) {
-        let tmp = bjs.pipes.sort(params);
+        let tmp = rc.pipes.sort(params);
         return tmp ? tmp.reverse() : '';
     },
     min: function(params) {
-        let tmp = bjs.pipes.sort(params);
+        let tmp = rc.pipes.sort(params);
         return tmp ? tmp[0] : '';
     },
     max: function(params) {
-        let tmp = bjs.pipes.reverse(params);
+        let tmp = rc.pipes.reverse(params);
         return tmp ? tmp[0] : '';
     }
 }
 
-bjs._attributes = [];
-bjs.__proto__.getAttributes = () => {
-    if ( bjs._attributes.length !== Object.keys(bjs.attributes).length ) {
+rc._attributes = [];
+rc.__proto__.getAttributes = () => {
+    if ( rc._attributes.length !== Object.keys(rc.attributes).length ) {
         let tmp = [];
-        for ( let i in bjs.attributes )
-            tmp.push({ name: i, priority: bjs.attributes[i].priority});
+        for ( let i in rc.attributes )
+            tmp.push({ name: i, priority: rc.attributes[i].priority});
         tmp.sort((a,b) => {
             if ( a.priority > b.priority )
                 return -1;
@@ -91,53 +91,53 @@ bjs.__proto__.getAttributes = () => {
                 return 1;
             return 0;
         })
-        bjs._attributes = tmp;
+        rc._attributes = tmp;
     }
-    return bjs._attributes;
+    return rc._attributes;
 }
 
-bjs.__proto__.getModel = function(node) {
+rc.__proto__.getModel = function(node) {
     for ( var i in this.models ) {
         if ( this.models[i].selector.contains(node) )
             return this.models[i];
     }
 }
 
-bjs.__proto__.getRouter = function(node) {
+rc.__proto__.getRouter = function(node) {
     for ( var i in this.routers ) {
         if ( this.routers[i].selector.contains(node) )
             return this.routers[i];
     }
 }
 
-bjs.__proto__.getStringIndex = function(string) {
-    var index = bjs.strings.indexOf(string);
+rc.__proto__.getStringIndex = function(string) {
+    var index = rc.strings.indexOf(string);
     if ( index === -1 ) {
-        bjs.strings.push(string);
-        index = bjs.strings.indexOf(string);
+        rc.strings.push(string);
+        index = rc.strings.indexOf(string);
     }
     return index;
 }
 
-bjs.__proto__.route = function() {
-    for ( let i in bjs.routers )
-        bjs.routers[i].handle(location.href);
+rc.__proto__.route = function() {
+    for ( let i in rc.routers )
+        rc.routers[i].handle(location.href);
 }
 
 if ( typeof b === 'undefined' )
-    var b = bjs;
+    var b = rc;
 if ( typeof $ === 'undefined' )
-    var $ = bjs;
+    var $ = rc;
 
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' ) {
-    module.exports = bjs;
+    module.exports = rc;
 } else {
-    window.addEventListener('popstate', bjs.route);
+    window.addEventListener('popstate', rc.route);
 }
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Expression = class Expression {
+rc.Expression = class Expression {
 
     constructor(string) {
         this.expression = string;
@@ -170,7 +170,7 @@ bjs.Expression = class Expression {
                                 if ( !isNaN(number) )
                                     tmp = number;
                             }
-                            value = value === undefined ? tmp : bjs.Expression.operations[item.type].func(value, tmp);
+                            value = value === undefined ? tmp : rc.Expression.operations[item.type].func(value, tmp);
                         }
                         break;
                     case '&':
@@ -185,7 +185,7 @@ bjs.Expression = class Expression {
                                 tmp = number;
                             value.push(tmp);
                             if ( value.length > 1 )
-                                value = [ bjs.Expression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ rc.Expression.operations[item.type].func(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -213,7 +213,7 @@ bjs.Expression = class Expression {
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
-                        value = bjs.pipes[item.name](params);
+                        value = rc.pipes[item.name](params);
                         break;
                 }
         }
@@ -277,7 +277,7 @@ bjs.Expression = class Expression {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos);
-                tmp_string += 'strings.' + bjs.getStringIndex(tmp) + ' + ';
+                tmp_string += 'strings.' + rc.getStringIndex(tmp) + ' + ';
                 pos = match.index;
             }
             tmp = match[0].substr(2, match[0].length - 4).trim();
@@ -289,7 +289,7 @@ bjs.Expression = class Expression {
         }
         tmp = string.substr(pos);
         if ( tmp.length )
-            tmp_string += 'strings.' + bjs.getStringIndex(tmp);
+            tmp_string += 'strings.' + rc.getStringIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
         if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
@@ -311,7 +311,7 @@ bjs.Expression = class Expression {
             } else {
                 if ( str.delim === match[0] ) {
                     str.string = string.substr(str.start, match.index - str.start);
-                    str.index = bjs.getStringIndex(str.string);
+                    str.index = rc.getStringIndex(str.string);
                     result += 'strings.' + str.index;
                     str.start = 0;
                 }
@@ -382,9 +382,9 @@ bjs.Expression = class Expression {
                     }
                     if ( item.type === token )
                         break;
-                    if ( bjs.Expression.operations[item.type].priority >= bjs.Expression.operations[token].priority )
+                    if ( rc.Expression.operations[item.type].priority >= rc.Expression.operations[token].priority )
                         item = { type: token, params: [ item ] };
-                    if ( bjs.Expression.operations[item.type].priority < bjs.Expression.operations[token].priority )
+                    if ( rc.Expression.operations[item.type].priority < rc.Expression.operations[token].priority )
                         item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
@@ -451,7 +451,7 @@ bjs.Expression = class Expression {
 
 };
 
-bjs.Expression.operations = {
+rc.Expression.operations = {
     '+': { priority: 0, func: function(a, b) { return a + b; } },
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
@@ -465,9 +465,9 @@ bjs.Expression.operations = {
     'pipe': { priority: 6 },
 };
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Attribute = class Attribute extends bjs.Expression {
+rc.Attribute = class Attribute extends rc.Expression {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name];
@@ -486,15 +486,15 @@ bjs.Attribute = class Attribute extends bjs.Expression {
 
 };
 
-bjs.Attribute.priority = 0;
-bjs.Attribute.check = function(node, name) {
+rc.Attribute.priority = 0;
+rc.Attribute.check = function(node, name) {
     let value = node.getAttribute(name).trim();
     return !value.startsWith('{{') ? '{{' + value + '}}' : value;
 };
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.App = class App {
+rc.App = class App {
 
     constructor(selector, data, options) {
         options = {
@@ -503,11 +503,11 @@ bjs.App = class App {
             run: false,
             ...options
         };
-        this.model = new bjs.Model(selector, data, {init: false});
+        this.model = new rc.Model(selector, data, {init: false});
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new bjs.Router(this.model.selector);
+            this.router = new rc.Router(this.model.selector);
         if ( options.run )
             this.run();
     }
@@ -554,9 +554,9 @@ bjs.App = class App {
 
 };
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
+rc.AttributeBase = class AttributeBase extends rc.Attribute {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name],
@@ -580,11 +580,11 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
     dealias(node, alias, base) {
         let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
-            if ( node.b_base ) {
-                value = node.b_base.replace(regexp, '$1' + base + '$2');
+            if ( node.rc_base ) {
+                value = node.rc_base.replace(regexp, '$1' + base + '$2');
             } else {
                 if ( node.nodeValue.match(regexp) ) {
-                    node.b_base = node.nodeValue;
+                    node.rc_base = node.nodeValue;
                     value = node.nodeValue.replace(regexp, '$1' + base + '$2');
                 } else
                     value = node.nodeValue;
@@ -596,16 +596,16 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
             }
             return;
         }
-        node.b_base = node.b_base || {};
+        node.rc_base = node.rc_base || {};
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = bjs.attributes[item.name] ? bjs.attributes[item.name].check(node, item.name) : item.value;
-            if ( node.b_base[item.name] ) {
-                value = node.b_base[item.name].replace(regexp, '$1' + base + '$2');
+            value = rc.attributes[item.name] ? rc.attributes[item.name].check(node, item.name) : item.value;
+            if ( node.rc_base[item.name] ) {
+                value = node.rc_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
                 if ( value.match(regexp) ) {
-                    node.b_base[item.name] = value;
+                    node.rc_base[item.name] = value;
                     value = value.replace(regexp, '$1' + base + '$2');
                 }
             }
@@ -615,8 +615,8 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
                 this.model.applyAttribute(node, item.name);
             }
         }
-        if ( !Object.keys(node.b_base).length )
-            delete node.b_base;
+        if ( !Object.keys(node.rc_base).length )
+            delete node.rc_base;
         items = node.childNodes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
@@ -632,11 +632,11 @@ bjs.AttributeBase = class AttributeBase extends bjs.Attribute {
 
 };
 
-bjs.attributes['b-base'] = bjs.AttributeBase;
+rc.attributes['b-base'] = rc.AttributeBase;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
+rc.AttributeFor = class AttributeFor extends rc.Attribute {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name],
@@ -657,13 +657,13 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
             child = this.node.querySelector('[b-key="' + key + '"]');
-            if ( child && child.b_index !== i ) {
+            if ( child && child.rc_index !== i ) {
                 child.remove();
                 child = null;
             }
             if ( !child ) {
                 child = this.template.cloneNode(true);
-                child.b_index = i;
+                child.rc_index = i;
                 child.setAttribute('b-key', key);
                 this.dealias(child, '\\$index', i);
                 this.dealias(child, '\\$key', key);
@@ -674,7 +674,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
             child = this.node.childNodes[i];
-            if ( items === undefined || items[child.b_index] === undefined )
+            if ( items === undefined || items[child.rc_index] === undefined )
                 remove.push(child);
         }
         for ( i in remove ) {
@@ -694,7 +694,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( !bjs.attributes[item.name] && !item.value.match(test) )
+            if ( !rc.attributes[item.name] && !item.value.match(test) )
                 continue;
             if ( item.value.match(replace) )
                 item.value = item.value.replace(replace, '$1' + base + '$2');
@@ -714,12 +714,12 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
 
 };
 
-bjs.AttributeFor.priority = 99;
-bjs.attributes['b-for'] = bjs.AttributeFor;
+rc.AttributeFor.priority = 99;
+rc.attributes['b-for'] = rc.AttributeFor;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
+rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
     constructor(node, name, model) {
         super(node, name, model);
@@ -738,12 +738,12 @@ bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
 
 };
 
-bjs.attributes['b-hide'] = bjs.AttributeHideShow;
-bjs.attributes['b-show'] = bjs.AttributeHideShow;
+rc.attributes['b-hide'] = rc.AttributeHideShow;
+rc.attributes['b-show'] = rc.AttributeHideShow;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
+rc.AttributeModel = class AttributeModel extends rc.Attribute {
 
     constructor(node, name, model) {
         super(node, name, model);
@@ -780,21 +780,21 @@ bjs.AttributeModel = class AttributeModel extends bjs.Attribute {
 
 };
 
-bjs.attributes['b-model'] = bjs.AttributeModel;
+rc.attributes['b-model'] = rc.AttributeModel;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Model = class Model {
+rc.Model = class Model {
 
     constructor(selector, data, options) {
         options = { init: true, ...options };
-        bjs.models.push(this);
-        this.proxyHandler = new bjs.ModelProxyHandler(this);
-        this.shadow = { ...data, strings: bjs.strings };
+        rc.models.push(this);
+        this.proxyHandler = new rc.ModelProxyHandler(this);
+        this.shadow = { ...data, strings: rc.strings };
         this.proxy = new Proxy({$: ''}, this.proxyHandler);
         this.listeners = { get: {}, set: {}, delete: {} };
         this.links = {};
-        this.selector = new bjs.Selector(selector);
+        this.selector = new rc.Selector(selector);
         if ( options.init )
             this.init();
     }
@@ -804,7 +804,7 @@ bjs.Model = class Model {
     }
 
     set data(value) {
-        value.strings = bjs.strings;
+        value.strings = rc.strings;
         this.shadow = value;
         for ( let i in this.selector )
             this.parseNode(this.selector.get(i), '');
@@ -822,7 +822,7 @@ bjs.Model = class Model {
         let i, element;
         for ( i in this.selector ) {
             element = this.selector.get(i);
-            element.addEventListener('input', bjs.Model.eventHander, true);
+            element.addEventListener('input', rc.Model.eventHander, true);
             this.parseNode(element);
         }
     }
@@ -844,24 +844,24 @@ bjs.Model = class Model {
     }
 
     applyAttributes(node) {
-        if ( node.b_attributes === undefined )
+        if ( node.rc_attributes === undefined )
             return;
         if ( node instanceof Text ) {
-            let value = node.b_attributes[''].eval(this);
+            let value = node.rc_attributes[''].eval(this);
             value = value !== undefined ? value.toString() : '';
             if ( node.nodeValue !== value )
                 node.nodeValue = value;
             return;
         }
         let name, attribute;
-        for ( name in node.b_attributes )
+        for ( name in node.rc_attributes )
             this.applyAttribute(node, name);
     }
 
     applyAttribute(node, name) {
-        if ( node.b_attributes === undefined || node.b_attributes[name] === undefined )
+        if ( node.rc_attributes === undefined || node.rc_attributes[name] === undefined )
             return;
-        node.b_attributes[name].apply();
+        node.rc_attributes[name].apply();
     }
 
     getNodes(link) {
@@ -905,63 +905,63 @@ bjs.Model = class Model {
     parseAttributes(node) {
         if ( node instanceof Text ) {
             if ( node.nodeValue.indexOf('{{') !== -1 ) {
-                node.b_attributes = { '': new bjs.Expression(node.nodeValue) };
+                node.rc_attributes = { '': new rc.Expression(node.nodeValue) };
                 this.updateLinks(node);
             } else {
-                if ( node.b_attributes === undefined )
-                    delete node.b_attributes;
+                if ( node.rc_attributes === undefined )
+                    delete node.rc_attributes;
             }
             return;
         }
-        let i, attribute, attributes = bjs.getAttributes();
+        let i, attribute, attributes = rc.getAttributes();
         for ( i in attributes )
             this.parseAttribute(node, attributes[i].name);
         for ( i = 0; i < node.attributes.length; i++ ) {
             attribute = node.attributes[i];
-            if ( bjs.attributes[attribute.name] === undefined )
+            if ( rc.attributes[attribute.name] === undefined )
                 this.parseAttribute(node, attribute.name);
         }
-        if ( node.b_attributes )
+        if ( node.rc_attributes )
             this.updateLinks(node);
     }
 
     parseAttribute(node, name) {
         let value, tmp = node.attributes[name];
         if ( !tmp ) {
-            if ( node.b_attributes )
-                delete node.b_attributes[name];
+            if ( node.rc_attributes )
+                delete node.rc_attributes[name];
             return;
         }
-        if ( node.b_attributes && node.b_attributes[name] ) {
-            let expression = '{{' + node.b_attributes[name].expression  + '}}';
+        if ( node.rc_attributes && node.rc_attributes[name] ) {
+            let expression = '{{' + node.rc_attributes[name].expression  + '}}';
             if ( expression === tmp.value )
                 return;
         }
-        if ( bjs.attributes[name] ) {
-            value = bjs.attributes[name].check(node, name);
+        if ( rc.attributes[name] ) {
+            value = rc.attributes[name].check(node, name);
             if ( tmp.value !== value )
                 tmp.value = value;
-            tmp = new bjs.attributes[name](node, name, this);
+            tmp = new rc.attributes[name](node, name, this);
         } else {
             if (tmp.value.indexOf('{{') === -1)
                 return;
-            if ( bjs.attributes[name] === undefined )
-                tmp = new bjs.Attribute(node, name, this);
+            if ( rc.attributes[name] === undefined )
+                tmp = new rc.Attribute(node, name, this);
         }
-        if ( node.b_attributes === undefined )
-            node.b_attributes = {};
-        node.b_attributes[name] = tmp;
+        if ( node.rc_attributes === undefined )
+            node.rc_attributes = {};
+        node.rc_attributes[name] = tmp;
     }
 
     updateLinks(node) {
         var i, j, tmp,
             set = new Set();
-        for ( i in node.b_attributes ) {
-            tmp = node.b_attributes[i].getLinks();
+        for ( i in node.rc_attributes ) {
+            tmp = node.rc_attributes[i].getLinks();
             for ( j in tmp )
                 set.add(tmp[j]);
         }
-        tmp = node.b_links || new Set();
+        tmp = node.rc_links || new Set();
         for ( i of tmp ) {
             if ( !set.has(i) )
                 this.unlink(node, i)
@@ -976,15 +976,15 @@ bjs.Model = class Model {
         if ( this.links[property] === undefined )
             this.links[property] = new Set();
         this.links[property].add(node);
-        if ( node.b_links === undefined )
-            node.b_links = new Set();
-        node.b_links.add(property);
+        if ( node.rc_links === undefined )
+            node.rc_links = new Set();
+        node.rc_links.add(property);
     }
 
     unlink(node, property) {
         if ( property === undefined ) {
-            if ( node.b_links !== undefined ) {
-                for ( let link of node.b_links )
+            if ( node.rc_links !== undefined ) {
+                for ( let link of node.rc_links )
                     this.unlink(node, link);
             }
             let i, nodes = node.childNodes;
@@ -996,17 +996,17 @@ bjs.Model = class Model {
                 if ( this.links[property].size === 0 )
                     delete this.links[property];
             }
-            if ( node.b_links !== undefined ) {
-                node.b_links.delete(property);
-                if ( node.b_links.size === 0 )
-                    delete node.b_links;
+            if ( node.rc_links !== undefined ) {
+                node.rc_links.delete(property);
+                if ( node.rc_links.size === 0 )
+                    delete node.rc_links;
             }
         }
     }
 
 }
 
-bjs.Model.eventHander = function(event) {
+rc.Model.eventHander = function(event) {
     if (
         !(event.target instanceof HTMLInputElement) &&
         !(event.target instanceof HTMLButtonElement ) &&
@@ -1014,19 +1014,19 @@ bjs.Model.eventHander = function(event) {
         !(event.target instanceof HTMLSelectElement)
     )
         return;
-    if ( event.target.b_attributes === undefined || event.target.b_attributes['b-model'] === undefined )
+    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['b-model'] === undefined )
         return;
-    let b_model = event.target.b_attributes['b-model'],
-        value_old = b_model.get(),
+    let rc_model = event.target.rc_attributes['b-model'],
+        value_old = rc_model.get(),
         value_new = event.target.value;
     if ( value_old === value_new )
         return;
-    b_model.set(value_new);
+    rc_model.set(value_new);
 }
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.ModelProxyHandler = class ModelProxyHandler {
+rc.ModelProxyHandler = class ModelProxyHandler {
 
     constructor(model) {
         this.model = model;
@@ -1121,9 +1121,9 @@ bjs.ModelProxyHandler = class ModelProxyHandler {
 
 }
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Resource = class Resource {
+rc.Resource = class Resource {
 
     constructor(url, type) {
         this.url = url;
@@ -1155,7 +1155,7 @@ bjs.Resource = class Resource {
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || bjs.Resource.headers) };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || rc.Resource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -1192,14 +1192,14 @@ bjs.Resource = class Resource {
 
 }
 
-bjs.Resource.headers = {};
+rc.Resource.headers = {};
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Router = class Router {
+rc.Router = class Router {
 
     constructor(selector) {
-        bjs.routers.push(this);
+        rc.routers.push(this);
         this.routes = {};
         this.selector = selector;
         this.init();
@@ -1209,7 +1209,7 @@ bjs.Router = class Router {
         let i, node;
         for ( i in this.selector ) {
             node = this.selector.get(i);
-            node.addEventListener('click', bjs.Router.eventHander, true);
+            node.addEventListener('click', rc.Router.eventHander, true);
         }
     }
 
@@ -1284,14 +1284,14 @@ bjs.Router = class Router {
 
 }
 
-bjs.Router.eventHander = function(event) {
+rc.Router.eventHander = function(event) {
     let target = event.target;
     while ( !(target instanceof HTMLAnchorElement) ) {
         target = target.parentNode;
         if ( target instanceof HTMLDocument )
             return;
     }
-    let router = bjs.getRouter(target);
+    let router = rc.getRouter(target);
     if ( !router )
         return;
     let route = target.getAttribute('href');
@@ -1299,9 +1299,9 @@ bjs.Router.eventHander = function(event) {
         event.preventDefault();
 }
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Selector = class Selector extends Array {
+rc.Selector = class Selector extends Array {
 
     constructor(options, selector) {
         super();
@@ -1504,7 +1504,7 @@ bjs.Selector = class Selector extends Array {
             case 'closest':
             case 'find':
             case 'parent':
-                return new bjs.Selector(result, this);
+                return new rc.Selector(result, this);
             case 'hasClass':
             case 'is':
                 return options.all === true ? true : false;

@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
+rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
     constructor(node, name, model) {
         super(node, name, model);
@@ -20,5 +20,5 @@ bjs.AttributeHideShow = class AttributeHideShow extends bjs.Attribute {
 
 };
 
-bjs.attributes['b-hide'] = bjs.AttributeHideShow;
-bjs.attributes['b-show'] = bjs.AttributeHideShow;
+rc.attributes['b-hide'] = rc.AttributeHideShow;
+rc.attributes['b-show'] = rc.AttributeHideShow;

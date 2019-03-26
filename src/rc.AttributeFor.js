@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
+rc.AttributeFor = class AttributeFor extends rc.Attribute {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name],
@@ -22,13 +22,13 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
             child = this.node.querySelector('[b-key="' + key + '"]');
-            if ( child && child.b_index !== i ) {
+            if ( child && child.rc_index !== i ) {
                 child.remove();
                 child = null;
             }
             if ( !child ) {
                 child = this.template.cloneNode(true);
-                child.b_index = i;
+                child.rc_index = i;
                 child.setAttribute('b-key', key);
                 this.dealias(child, '\\$index', i);
                 this.dealias(child, '\\$key', key);
@@ -39,7 +39,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
             child = this.node.childNodes[i];
-            if ( items === undefined || items[child.b_index] === undefined )
+            if ( items === undefined || items[child.rc_index] === undefined )
                 remove.push(child);
         }
         for ( i in remove ) {
@@ -59,7 +59,7 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( !bjs.attributes[item.name] && !item.value.match(test) )
+            if ( !rc.attributes[item.name] && !item.value.match(test) )
                 continue;
             if ( item.value.match(replace) )
                 item.value = item.value.replace(replace, '$1' + base + '$2');
@@ -79,5 +79,5 @@ bjs.AttributeFor = class AttributeFor extends bjs.Attribute {
 
 };
 
-bjs.AttributeFor.priority = 99;
-bjs.attributes['b-for'] = bjs.AttributeFor;
+rc.AttributeFor.priority = 99;
+rc.attributes['b-for'] = rc.AttributeFor;

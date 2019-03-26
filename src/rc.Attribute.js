@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Attribute = class Attribute extends bjs.Expression {
+rc.Attribute = class Attribute extends rc.Expression {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name];
@@ -20,8 +20,8 @@ bjs.Attribute = class Attribute extends bjs.Expression {
 
 };
 
-bjs.Attribute.priority = 0;
-bjs.Attribute.check = function(node, name) {
+rc.Attribute.priority = 0;
+rc.Attribute.check = function(node, name) {
     let value = node.getAttribute(name).trim();
     return !value.startsWith('{{') ? '{{' + value + '}}' : value;
 };

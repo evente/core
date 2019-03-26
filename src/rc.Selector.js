@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.Selector = class Selector extends Array {
+rc.Selector = class Selector extends Array {
 
     constructor(options, selector) {
         super();
@@ -204,7 +204,7 @@ bjs.Selector = class Selector extends Array {
             case 'closest':
             case 'find':
             case 'parent':
-                return new bjs.Selector(result, this);
+                return new rc.Selector(result, this);
             case 'hasClass':
             case 'is':
                 return options.all === true ? true : false;

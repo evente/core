@@ -1,7 +1,7 @@
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var bjs = require('./bjs.js');
+    var rc = require('./rc.js');
 
-bjs.App = class App {
+rc.App = class App {
 
     constructor(selector, data, options) {
         options = {
@@ -10,11 +10,11 @@ bjs.App = class App {
             run: false,
             ...options
         };
-        this.model = new bjs.Model(selector, data, {init: false});
+        this.model = new rc.Model(selector, data, {init: false});
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new bjs.Router(this.model.selector);
+            this.router = new rc.Router(this.model.selector);
         if ( options.run )
             this.run();
     }

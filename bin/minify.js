@@ -19,26 +19,26 @@ let uglifyOptions = {
 }
 
 let inputDir = 'src/';
-let outputFile = 'dist/bjs.js';
-let outputFileMinified = 'dist/bjs.min.js';
+let outputFile = 'dist/rc.js';
+let outputFileMinified = 'dist/rc.min.js';
 let inputFiles = [
     // Extensions
     'Object.js',
     // Order has matter
-    'bjs.js',
-    'bjs.Expression.js',
-    'bjs.Attribute.js',
+    'rc.js',
+    'rc.Expression.js',
+    'rc.Attribute.js',
     // Order has no matter - ordered by name
-    'bjs.App.js',
-    'bjs.AttributeBase.js',
-    'bjs.AttributeFor.js',
-    'bjs.AttributeHideShow.js',
-    'bjs.AttributeModel.js',
-    'bjs.Model.js',
-    'bjs.ModelProxyHandler.js',
-    'bjs.Resource.js',
-    'bjs.Router.js',
-    'bjs.Selector.js',
+    'rc.App.js',
+    'rc.AttributeBase.js',
+    'rc.AttributeFor.js',
+    'rc.AttributeHideShow.js',
+    'rc.AttributeModel.js',
+    'rc.Model.js',
+    'rc.ModelProxyHandler.js',
+    'rc.Resource.js',
+    'rc.Router.js',
+    'rc.Selector.js',
 ];
 
 function minify() {
