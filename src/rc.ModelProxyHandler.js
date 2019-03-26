@@ -8,7 +8,7 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     }
 
     deleteProperty(target, prop) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         let listeners = this.model.listeners.delete[target.$];
         if ( listeners ) {
             for ( let listener of listeners )
@@ -25,7 +25,7 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     get(target, prop) {
         if ( prop === 'constructor' )
             return { name: 'Proxy' };
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         switch ( prop ) {
             case 'keys':
                 return Object.keys(data);
@@ -55,28 +55,28 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     }
 
     getPrototypeOf(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         // Not Reflect.getPrototypeOf(data), for .. in not working
         return data;
     }
 
     has(target, prop) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Reflect.has(data, prop);
     }
 
     isExtensible(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Reflect.isExtensible(data);
     }
 
     ownKeys(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Object.keys(data);
     }
 
     set(target, prop, value) {
-        let data = this.model.shadow.getProperty(target.$),
+        let data = this.model.shadow.getField(target.$),
             listeners = this.model.listeners.set[target.$];
         if ( value.constructor.name === 'Proxy' )
             value = value.clone();

@@ -65,7 +65,7 @@ rc.Expression = class Expression {
                             value = value !== undefined ? value + '.' + item.params[1] : undefined;
                         } else {
                             value = this.eval(model, item.params[0]);
-                            value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
+                            value = value !== undefined ? value.getField(item.params[1]) : undefined;
                         }
                         break;
                     case 'index':

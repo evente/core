@@ -77,4 +77,4 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
 
 };
 
-rc.attributes['b-base'] = rc.AttributeBase;
+rc.attributes['rc-base'] = rc.AttributeBase;

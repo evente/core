@@ -1,6 +1,6 @@
 Object.defineProperty(
     Object.prototype,
-    'getProperty',
+    'getField',
     {
         value: function(field) {
             if ( field === '' )
@@ -22,7 +22,7 @@ Object.defineProperty(
 
 Object.defineProperty(
     Object.prototype,
-    'setProperty',
+    'setField',
     {
         value: function(field, value) {
             let i,
@@ -201,7 +201,7 @@ rc.Expression = class Expression {
                             value = value !== undefined ? value + '.' + item.params[1] : undefined;
                         } else {
                             value = this.eval(model, item.params[0]);
-                            value = value !== undefined ? value.getProperty(item.params[1]) : undefined;
+                            value = value !== undefined ? value.getField(item.params[1]) : undefined;
                         }
                         break;
                     case 'index':
@@ -632,7 +632,7 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
 
 };
 
-rc.attributes['b-base'] = rc.AttributeBase;
+rc.attributes['rc-base'] = rc.AttributeBase;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var rc = require('./rc.js');
 
@@ -656,7 +656,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
             items = this.eval(this.model);
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
-            child = this.node.querySelector('[b-key="' + key + '"]');
+            child = this.node.querySelector('[rc-key="' + key + '"]');
             if ( child && child.rc_index !== i ) {
                 child.remove();
                 child = null;
@@ -664,7 +664,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
             if ( !child ) {
                 child = this.template.cloneNode(true);
                 child.rc_index = i;
-                child.setAttribute('b-key', key);
+                child.setAttribute('rc-key', key);
                 this.dealias(child, '\\$index', i);
                 this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
@@ -715,7 +715,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
 };
 
 rc.AttributeFor.priority = 99;
-rc.attributes['b-for'] = rc.AttributeFor;
+rc.attributes['rc-for'] = rc.AttributeFor;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var rc = require('./rc.js');
 
@@ -728,8 +728,8 @@ rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
     apply() {
         if (
-            ( this.type == 'b-hide' && !this.eval(this.model) ) ||
-            ( this.type == 'b-show' && this.eval(this.model) )
+            ( this.type == 'rc-hide' && !this.eval(this.model) ) ||
+            ( this.type == 'rc-show' && this.eval(this.model) )
         )
             this.node.style.display = '';
         else
@@ -738,8 +738,8 @@ rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
 };
 
-rc.attributes['b-hide'] = rc.AttributeHideShow;
-rc.attributes['b-show'] = rc.AttributeHideShow;
+rc.attributes['rc-hide'] = rc.AttributeHideShow;
+rc.attributes['rc-show'] = rc.AttributeHideShow;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var rc = require('./rc.js');
 
@@ -780,7 +780,7 @@ rc.AttributeModel = class AttributeModel extends rc.Attribute {
 
 };
 
-rc.attributes['b-model'] = rc.AttributeModel;
+rc.attributes['rc-model'] = rc.AttributeModel;
 if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
     var rc = require('./rc.js');
 
@@ -811,11 +811,11 @@ rc.Model = class Model {
     }
 
     get(property) {
-        return this.data.getProperty(property);
+        return this.data.getField(property);
     }
 
     set(property, value) {
-        this.data.setProperty(property, value);
+        this.data.setField(property, value);
     }
 
     init() {
@@ -1014,9 +1014,9 @@ rc.Model.eventHander = function(event) {
         !(event.target instanceof HTMLSelectElement)
     )
         return;
-    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['b-model'] === undefined )
+    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['rc-model'] === undefined )
         return;
-    let rc_model = event.target.rc_attributes['b-model'],
+    let rc_model = event.target.rc_attributes['rc-model'],
         value_old = rc_model.get(),
         value_new = event.target.value;
     if ( value_old === value_new )
@@ -1033,7 +1033,7 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     }
 
     deleteProperty(target, prop) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         let listeners = this.model.listeners.delete[target.$];
         if ( listeners ) {
             for ( let listener of listeners )
@@ -1050,7 +1050,7 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     get(target, prop) {
         if ( prop === 'constructor' )
             return { name: 'Proxy' };
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         switch ( prop ) {
             case 'keys':
                 return Object.keys(data);
@@ -1080,28 +1080,28 @@ rc.ModelProxyHandler = class ModelProxyHandler {
     }
 
     getPrototypeOf(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         // Not Reflect.getPrototypeOf(data), for .. in not working
         return data;
     }
 
     has(target, prop) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Reflect.has(data, prop);
     }
 
     isExtensible(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Reflect.isExtensible(data);
     }
 
     ownKeys(target) {
-        let data = this.model.shadow.getProperty(target.$);
+        let data = this.model.shadow.getField(target.$);
         return Object.keys(data);
     }
 
     set(target, prop, value) {
-        let data = this.model.shadow.getProperty(target.$),
+        let data = this.model.shadow.getField(target.$),
             listeners = this.model.listeners.set[target.$];
         if ( value.constructor.name === 'Proxy' )
             value = value.clone();

@@ -38,4 +38,4 @@ rc.AttributeModel = class AttributeModel extends rc.Attribute {
 
 };
 
-rc.attributes['b-model'] = rc.AttributeModel;
+rc.attributes['rc-model'] = rc.AttributeModel;

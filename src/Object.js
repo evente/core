@@ -1,6 +1,6 @@
 Object.defineProperty(
     Object.prototype,
-    'getProperty',
+    'getField',
     {
         value: function(field) {
             if ( field === '' )
@@ -22,7 +22,7 @@ Object.defineProperty(
 
 Object.defineProperty(
     Object.prototype,
-    'setProperty',
+    'setField',
     {
         value: function(field, value) {
             let i,

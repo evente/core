@@ -10,8 +10,8 @@ rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
     apply() {
         if (
-            ( this.type == 'b-hide' && !this.eval(this.model) ) ||
-            ( this.type == 'b-show' && this.eval(this.model) )
+            ( this.type == 'rc-hide' && !this.eval(this.model) ) ||
+            ( this.type == 'rc-show' && this.eval(this.model) )
         )
             this.node.style.display = '';
         else
@@ -20,5 +20,5 @@ rc.AttributeHideShow = class AttributeHideShow extends rc.Attribute {
 
 };
 
-rc.attributes['b-hide'] = rc.AttributeHideShow;
-rc.attributes['b-show'] = rc.AttributeHideShow;
+rc.attributes['rc-hide'] = rc.AttributeHideShow;
+rc.attributes['rc-show'] = rc.AttributeHideShow;

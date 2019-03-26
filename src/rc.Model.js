@@ -28,11 +28,11 @@ rc.Model = class Model {
     }
 
     get(property) {
-        return this.data.getProperty(property);
+        return this.data.getField(property);
     }
 
     set(property, value) {
-        this.data.setProperty(property, value);
+        this.data.setField(property, value);
     }
 
     init() {
@@ -231,9 +231,9 @@ rc.Model.eventHander = function(event) {
         !(event.target instanceof HTMLSelectElement)
     )
         return;
-    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['b-model'] === undefined )
+    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['rc-model'] === undefined )
         return;
-    let rc_model = event.target.rc_attributes['b-model'],
+    let rc_model = event.target.rc_attributes['rc-model'],
         value_old = rc_model.get(),
         value_new = event.target.value;
     if ( value_old === value_new )

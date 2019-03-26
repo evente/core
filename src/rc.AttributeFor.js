@@ -21,7 +21,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
             items = this.eval(this.model);
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
-            child = this.node.querySelector('[b-key="' + key + '"]');
+            child = this.node.querySelector('[rc-key="' + key + '"]');
             if ( child && child.rc_index !== i ) {
                 child.remove();
                 child = null;
@@ -29,7 +29,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
             if ( !child ) {
                 child = this.template.cloneNode(true);
                 child.rc_index = i;
-                child.setAttribute('b-key', key);
+                child.setAttribute('rc-key', key);
                 this.dealias(child, '\\$index', i);
                 this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
@@ -80,4 +80,4 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
 };
 
 rc.AttributeFor.priority = 99;
-rc.attributes['b-for'] = rc.AttributeFor;
+rc.attributes['rc-for'] = rc.AttributeFor;
