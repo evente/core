@@ -2,25 +2,25 @@ var bjs = require('../bin/test.js');
 
 describe('Object class extensions', () => {
 
-    test('Get undefined property', () => {
+    test('Get undefined field', () => {
         let obj = { data: {} };
-        expect(obj.getProperty('data.id')).toBeUndefined();
+        expect(obj.getField('data.id')).toBeUndefined();
     });
 
-    test('Get defined property', () => {
+    test('Get defined field', () => {
         let obj = { data: [{id: undefined}, {id: 1}] };
-        expect(obj.getProperty('data.1.id')).toBe(1);
+        expect(obj.getField('data.1.id')).toBe(1);
     });
 
-    test('Set object property', () => {
+    test('Set object field', () => {
         let obj = { data: {} };
-        obj.setProperty('data.id', 1);
+        obj.setField('data.id', 1);
         expect(obj.data.id).toBe(1);
     });
 
-    test('Set array property', () => {
+    test('Set array field', () => {
         let obj = {};
-        obj.setProperty('data.1.id', 1);
+        obj.setField('data.1.id', 1);
         expect(obj.data[1].id).toBe(1);
     });
 
