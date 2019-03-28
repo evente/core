@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.ModelProxyHandler = class ModelProxyHandler {
+evente.ModelProxyHandler = class {
 
     constructor(model) {
         this.model = model;

@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.App = class App {
+evente.App = class {
 
     constructor(selector, data, options) {
         options = {
@@ -10,11 +9,11 @@ rc.App = class App {
             run: false,
             ...options
         };
-        this.model = new rc.Model(selector, data, {init: false});
+        this.model = new evente.Model(selector, data, {init: false});
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new rc.Router(this.model.selector);
+            this.router = new evente.Router(this.model.selector);
         if ( options.run )
             this.run();
     }

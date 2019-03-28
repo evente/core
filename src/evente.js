@@ -1,12 +1,12 @@
-var rc = function(selector){
-    return new rc.Selector(selector);
+var evente = function(selector) {
+    return new evente.Selector(selector);
 }
 
-rc.attributes = {};
-rc.models = [];
-rc.routers = [];
-rc.strings = [];
-rc.pipes = {
+evente.attributes = {};
+evente.models = [];
+evente.routers = [];
+evente.strings = [];
+evente.pipes = {
     empty: function(params) {
         return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
     },
@@ -25,25 +25,25 @@ rc.pipes = {
         return values.sort();
     },
     reverse: function(params) {
-        let tmp = rc.pipes.sort(params);
+        let tmp = evente.pipes.sort(params);
         return tmp ? tmp.reverse() : '';
     },
     min: function(params) {
-        let tmp = rc.pipes.sort(params);
+        let tmp = evente.pipes.sort(params);
         return tmp ? tmp[0] : '';
     },
     max: function(params) {
-        let tmp = rc.pipes.reverse(params);
+        let tmp = evente.pipes.reverse(params);
         return tmp ? tmp[0] : '';
     }
 }
 
-rc._attributes = [];
-rc.__proto__.getAttributes = () => {
-    if ( rc._attributes.length !== Object.keys(rc.attributes).length ) {
+evente._attributes = [];
+evente.__proto__.getAttributes = () => {
+    if ( evente._attributes.length !== Object.keys(evente.attributes).length ) {
         let tmp = [];
-        for ( let i in rc.attributes )
-            tmp.push({ name: i, priority: rc.attributes[i].priority});
+        for ( let i in evente.attributes )
+            tmp.push({ name: i, priority: evente.attributes[i].priority});
         tmp.sort((a,b) => {
             if ( a.priority > b.priority )
                 return -1;
@@ -51,46 +51,45 @@ rc.__proto__.getAttributes = () => {
                 return 1;
             return 0;
         })
-        rc._attributes = tmp;
+        evente._attributes = tmp;
     }
-    return rc._attributes;
+    return evente._attributes;
 }
 
-rc.__proto__.getModel = function(node) {
+evente.__proto__.getModel = function(node) {
     for ( var i in this.models ) {
         if ( this.models[i].selector.contains(node) )
             return this.models[i];
     }
 }
 
-rc.__proto__.getRouter = function(node) {
+evente.__proto__.getRouter = function(node) {
     for ( var i in this.routers ) {
         if ( this.routers[i].selector.contains(node) )
             return this.routers[i];
     }
 }
 
-rc.__proto__.getStringIndex = function(string) {
-    var index = rc.strings.indexOf(string);
+evente.__proto__.getStringIndex = function(string) {
+    var index = evente.strings.indexOf(string);
     if ( index === -1 ) {
-        rc.strings.push(string);
-        index = rc.strings.indexOf(string);
+        evente.strings.push(string);
+        index = evente.strings.indexOf(string);
     }
     return index;
 }
 
-rc.__proto__.route = function() {
-    for ( let i in rc.routers )
-        rc.routers[i].handle(location.href);
+evente.__proto__.route = function() {
+    for ( let i in evente.routers )
+        evente.routers[i].handle(location.href);
 }
 
-if ( typeof b === 'undefined' )
-    var b = rc;
-if ( typeof $ === 'undefined' )
-    var $ = rc;
-
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' ) {
-    module.exports = rc;
+if ( typeof module !== 'undefined' ) {
+    module.exports = evente;
 } else {
-    window.addEventListener('popstate', rc.route);
+    if ( typeof e === 'undefined' )
+        var e = evente;
+    if ( typeof $ === 'undefined' )
+        var $ = evente;
+    window.addEventListener('popstate', evente.route);
 }

@@ -1,44 +1,39 @@
 let fs = require('fs');
 let uglify = require("uglify-es");
 let uglifyOptions = {
-    ecma: 8,
     compress: {
         drop_console: true,
-        unsafe_arrows: true,
-        unsafe_math: true,
-        unsafe_methods: true,
-        unsafe_undefined: true,
         global_defs: {
             process: {
                 env: {
-                    NODE_ENV: "production"
+                    NODE_ENV: "build"
                 }
             }
         },
-    },
+    }
 }
 
 let inputDir = 'src/';
-let outputFile = 'dist/rc.js';
-let outputFileMinified = 'dist/rc.min.js';
+let outputFile = 'dist/evente.js';
+let outputFileMinified = 'dist/evente.min.js';
 let inputFiles = [
     // Extensions
     'Object.js',
     // Order has matter
-    'rc.js',
-    'rc.Expression.js',
-    'rc.Attribute.js',
+    'evente.js',
+    'Expression.js',
+    'Attribute.js',
     // Order has no matter - ordered by name
-    'rc.App.js',
-    'rc.AttributeBase.js',
-    'rc.AttributeFor.js',
-    'rc.AttributeHideShow.js',
-    'rc.AttributeModel.js',
-    'rc.Model.js',
-    'rc.ModelProxyHandler.js',
-    'rc.Resource.js',
-    'rc.Router.js',
-    'rc.Selector.js',
+    'App.js',
+    'AttributeBase.js',
+    'AttributeFor.js',
+    'AttributeHideShow.js',
+    'AttributeModel.js',
+    'Model.js',
+    'ModelProxyHandler.js',
+    'Resource.js',
+    'Router.js',
+    'Selector.js',
 ];
 
 function minify() {
@@ -47,13 +42,14 @@ function minify() {
         console.log(inputDir + file);
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
+    inputCode = inputCode.replace(/var evente = require\('\.\/evente\.js'\);\n?/gm, '');
     try {
         fs.writeFileSync(outputFile, inputCode);
         let outputCode = uglify.minify(inputCode, uglifyOptions).code;
         fs.writeFileSync(outputFileMinified, outputCode);
-        console.log('Rebuild done!');
+        console.log('Done!');
     } catch (e) {
-        console.log('Rebuild cannot be done! Source code has errors!');
+        console.warn('Source code has errors!');
     }
 }
 

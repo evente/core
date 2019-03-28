@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.Resource = class Resource {
+evente.Resource = class {
 
     constructor(url, type) {
         this.url = url;
@@ -33,7 +32,7 @@ rc.Resource = class Resource {
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || rc.Resource.headers) };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || evente.Resource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -70,4 +69,4 @@ rc.Resource = class Resource {
 
 }
 
-rc.Resource.headers = {};
+evente.Resource.headers = {};

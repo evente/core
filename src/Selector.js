@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.Selector = class Selector extends Array {
+evente.Selector = class extends Array {
 
     constructor(options, selector) {
         super();
@@ -204,7 +203,7 @@ rc.Selector = class Selector extends Array {
             case 'closest':
             case 'find':
             case 'parent':
-                return new rc.Selector(result, this);
+                return new evente.Selector(result, this);
             case 'hasClass':
             case 'is':
                 return options.all === true ? true : false;

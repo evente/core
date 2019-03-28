@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.Attribute = class Attribute extends rc.Expression {
+evente.Attribute = class extends evente.Expression {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name];
@@ -20,8 +19,8 @@ rc.Attribute = class Attribute extends rc.Expression {
 
 };
 
-rc.Attribute.priority = 0;
-rc.Attribute.check = function(node, name) {
+evente.Attribute.priority = 0;
+evente.Attribute.check = function(node, name) {
     let value = node.getAttribute(name).trim();
     return !value.startsWith('{{') ? '{{' + value + '}}' : value;
 };

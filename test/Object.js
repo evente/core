@@ -1,4 +1,4 @@
-var bjs = require('../bin/test.js');
+var evente = require('../scripts/test.js');
 
 describe('Object class extensions', () => {
 

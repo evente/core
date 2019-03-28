@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.AttributeModel = class AttributeModel extends rc.Attribute {
+evente.AttributeModel = class extends evente.Attribute {
 
     constructor(node, name, model) {
         super(node, name, model);
@@ -38,4 +37,4 @@ rc.AttributeModel = class AttributeModel extends rc.Attribute {
 
 };
 
-rc.attributes['rc-model'] = rc.AttributeModel;
+evente.attributes['e-model'] = evente.AttributeModel;

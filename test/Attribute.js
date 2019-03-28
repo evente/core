@@ -1,21 +1,21 @@
-var rc = require('../bin/test.js');
+var evente = require('../scripts/test.js');
 
 const html_attribute =
-    '<div id="hide" rc-hide="hide"></div>' +
-    '<div id="show" rc-show="show"></div>';
+    '<div id="hide" e-hide="hide"></div>' +
+    '<div id="show" e-show="show"></div>';
 
 
 describe('Attribute class', () => {
 
-    test('Attribute rc-hide', () => {
+    test('Attribute e-hide', () => {
         document.body.innerHTML = html_attribute;
-        let model = new rc.Model('body', {hide: true});
+        let model = new evente.Model('body', {hide: true});
         expect(document.getElementById('hide').style.display).toBe('none');
     });
 
-    test('Attribute rc-show', () => {
+    test('Attribute e-show', () => {
         document.body.innerHTML = html_attribute;
-        let model = new rc.Model('body', {show: false});
+        let model = new evente.Model('body', {show: false});
         expect(document.getElementById('show').style.display).toBe('none');
     });
 

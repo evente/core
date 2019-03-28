@@ -1,29 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const minify = require('../bin/minify.js');
+const minify = require('./minify.js');
 
 const hostname = '127.0.0.1';
 const port = 3000;
-const watchDir = 'src/';
 const htmlDir = 'html/';
 const srcDir = 'src/';
-const buildDir = 'dist/';
+const distDir = 'dist/';
 
-console.log('Watching ' + watchDir + ' for changes...');
-watch(watchDir);
+console.log('Watching ' + srcDir + ' for changes...');
+watch(srcDir);
 
 http.createServer((req, res) => {
     let dir = path.dirname(req.url);
-    let file = path.basename(req.url) || 'dev.html';
+    let file = path.basename(req.url) || 'index.html';
     let source;
     switch ( dir ) {
         case '/src':  source = srcDir + file;   break;
-        case '/dist': source = buildDir + file; break;
+        case '/dist': source = distDir + file; break;
         default:      source = htmlDir + file;  break;
     }
     if ( !fs.existsSync(source) )
-        source = htmlDir + 'dev.html';
+        source = htmlDir + 'index.html';
     fs.readFile(source, function(err, contents) {
         if ( !err ) {
             res.end(contents);

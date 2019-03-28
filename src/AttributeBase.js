@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.AttributeBase = class AttributeBase extends rc.Attribute {
+evente.AttributeBase = class extends evente.Attribute {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name],
@@ -25,11 +24,11 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
     dealias(node, alias, base) {
         let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
-            if ( node.rc_base ) {
-                value = node.rc_base.replace(regexp, '$1' + base + '$2');
+            if ( node.e_base ) {
+                value = node.e_base.replace(regexp, '$1' + base + '$2');
             } else {
                 if ( node.nodeValue.match(regexp) ) {
-                    node.rc_base = node.nodeValue;
+                    node.e_base = node.nodeValue;
                     value = node.nodeValue.replace(regexp, '$1' + base + '$2');
                 } else
                     value = node.nodeValue;
@@ -41,16 +40,16 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
             }
             return;
         }
-        node.rc_base = node.rc_base || {};
+        node.e_base = node.e_base || {};
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = rc.attributes[item.name] ? rc.attributes[item.name].check(node, item.name) : item.value;
-            if ( node.rc_base[item.name] ) {
-                value = node.rc_base[item.name].replace(regexp, '$1' + base + '$2');
+            value = evente.attributes[item.name] ? evente.attributes[item.name].check(node, item.name) : item.value;
+            if ( node.e_base[item.name] ) {
+                value = node.e_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
                 if ( value.match(regexp) ) {
-                    node.rc_base[item.name] = value;
+                    node.e_base[item.name] = value;
                     value = value.replace(regexp, '$1' + base + '$2');
                 }
             }
@@ -60,8 +59,8 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
                 this.model.applyAttribute(node, item.name);
             }
         }
-        if ( !Object.keys(node.rc_base).length )
-            delete node.rc_base;
+        if ( !Object.keys(node.e_base).length )
+            delete node.e_base;
         items = node.childNodes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
@@ -77,4 +76,4 @@ rc.AttributeBase = class AttributeBase extends rc.Attribute {
 
 };
 
-rc.attributes['rc-base'] = rc.AttributeBase;
+evente.attributes['e-base'] = evente.AttributeBase;

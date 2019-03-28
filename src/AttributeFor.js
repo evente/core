@@ -1,7 +1,6 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.AttributeFor = class AttributeFor extends rc.Attribute {
+evente.AttributeFor = class extends evente.Attribute {
 
     constructor(node, name, model) {
         let attribute = node.attributes[name],
@@ -21,15 +20,15 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
             items = this.eval(this.model);
         for ( i in items ) {
             key = this.key !== undefined ? items[i][this.key] : i;
-            child = this.node.querySelector('[rc-key="' + key + '"]');
-            if ( child && child.rc_index !== i ) {
+            child = this.node.querySelector('[e-key="' + key + '"]');
+            if ( child && child.e_index !== i ) {
                 child.remove();
                 child = null;
             }
             if ( !child ) {
                 child = this.template.cloneNode(true);
-                child.rc_index = i;
-                child.setAttribute('rc-key', key);
+                child.e_index = i;
+                child.setAttribute('e-key', key);
                 this.dealias(child, '\\$index', i);
                 this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
@@ -39,7 +38,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
             child = this.node.childNodes[i];
-            if ( items === undefined || items[child.rc_index] === undefined )
+            if ( items === undefined || items[child.e_index] === undefined )
                 remove.push(child);
         }
         for ( i in remove ) {
@@ -59,7 +58,7 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( !rc.attributes[item.name] && !item.value.match(test) )
+            if ( !evente.attributes[item.name] && !item.value.match(test) )
                 continue;
             if ( item.value.match(replace) )
                 item.value = item.value.replace(replace, '$1' + base + '$2');
@@ -79,5 +78,5 @@ rc.AttributeFor = class AttributeFor extends rc.Attribute {
 
 };
 
-rc.AttributeFor.priority = 99;
-rc.attributes['rc-for'] = rc.AttributeFor;
+evente.AttributeFor.priority = 99;
+evente.attributes['e-for'] = evente.AttributeFor;

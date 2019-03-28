@@ -1,10 +1,9 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.Router = class Router {
+evente.Router = class {
 
     constructor(selector) {
-        rc.routers.push(this);
+        evente.routers.push(this);
         this.routes = {};
         this.selector = selector;
         this.init();
@@ -14,7 +13,7 @@ rc.Router = class Router {
         let i, node;
         for ( i in this.selector ) {
             node = this.selector.get(i);
-            node.addEventListener('click', rc.Router.eventHander, true);
+            node.addEventListener('click', evente.Router.eventHander, true);
         }
     }
 
@@ -89,14 +88,14 @@ rc.Router = class Router {
 
 }
 
-rc.Router.eventHander = function(event) {
+evente.Router.eventHander = function(event) {
     let target = event.target;
     while ( !(target instanceof HTMLAnchorElement) ) {
         target = target.parentNode;
         if ( target instanceof HTMLDocument )
             return;
     }
-    let router = rc.getRouter(target);
+    let router = evente.getRouter(target);
     if ( !router )
         return;
     let route = target.getAttribute('href');

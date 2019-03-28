@@ -1,17 +1,16 @@
-if ( typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' )
-    var rc = require('./rc.js');
+var evente = require('./evente.js');
 
-rc.Model = class Model {
+evente.Model = class {
 
     constructor(selector, data, options) {
         options = { init: true, ...options };
-        rc.models.push(this);
-        this.proxyHandler = new rc.ModelProxyHandler(this);
-        this.shadow = { ...data, strings: rc.strings };
+        evente.models.push(this);
+        this.proxyHandler = new evente.ModelProxyHandler(this);
+        this.shadow = { ...data, strings: evente.strings };
         this.proxy = new Proxy({$: ''}, this.proxyHandler);
         this.listeners = { get: {}, set: {}, delete: {} };
         this.links = {};
-        this.selector = new rc.Selector(selector);
+        this.selector = new evente.Selector(selector);
         if ( options.init )
             this.init();
     }
@@ -21,7 +20,7 @@ rc.Model = class Model {
     }
 
     set data(value) {
-        value.strings = rc.strings;
+        value.strings = evente.strings;
         this.shadow = value;
         for ( let i in this.selector )
             this.parseNode(this.selector.get(i), '');
@@ -39,7 +38,7 @@ rc.Model = class Model {
         let i, element;
         for ( i in this.selector ) {
             element = this.selector.get(i);
-            element.addEventListener('input', rc.Model.eventHander, true);
+            element.addEventListener('input', evente.Model.eventHander, true);
             this.parseNode(element);
         }
     }
@@ -61,24 +60,24 @@ rc.Model = class Model {
     }
 
     applyAttributes(node) {
-        if ( node.rc_attributes === undefined )
+        if ( node.e_attributes === undefined )
             return;
         if ( node instanceof Text ) {
-            let value = node.rc_attributes[''].eval(this);
+            let value = node.e_attributes[''].eval(this);
             value = value !== undefined ? value.toString() : '';
             if ( node.nodeValue !== value )
                 node.nodeValue = value;
             return;
         }
         let name, attribute;
-        for ( name in node.rc_attributes )
+        for ( name in node.e_attributes )
             this.applyAttribute(node, name);
     }
 
     applyAttribute(node, name) {
-        if ( node.rc_attributes === undefined || node.rc_attributes[name] === undefined )
+        if ( node.e_attributes === undefined || node.e_attributes[name] === undefined )
             return;
-        node.rc_attributes[name].apply();
+        node.e_attributes[name].apply();
     }
 
     getNodes(link) {
@@ -122,63 +121,63 @@ rc.Model = class Model {
     parseAttributes(node) {
         if ( node instanceof Text ) {
             if ( node.nodeValue.indexOf('{{') !== -1 ) {
-                node.rc_attributes = { '': new rc.Expression(node.nodeValue) };
+                node.e_attributes = { '': new evente.Expression(node.nodeValue) };
                 this.updateLinks(node);
             } else {
-                if ( node.rc_attributes === undefined )
-                    delete node.rc_attributes;
+                if ( node.e_attributes === undefined )
+                    delete node.e_attributes;
             }
             return;
         }
-        let i, attribute, attributes = rc.getAttributes();
+        let i, attribute, attributes = evente.getAttributes();
         for ( i in attributes )
             this.parseAttribute(node, attributes[i].name);
         for ( i = 0; i < node.attributes.length; i++ ) {
             attribute = node.attributes[i];
-            if ( rc.attributes[attribute.name] === undefined )
+            if ( evente.attributes[attribute.name] === undefined )
                 this.parseAttribute(node, attribute.name);
         }
-        if ( node.rc_attributes )
+        if ( node.e_attributes )
             this.updateLinks(node);
     }
 
     parseAttribute(node, name) {
         let value, tmp = node.attributes[name];
         if ( !tmp ) {
-            if ( node.rc_attributes )
-                delete node.rc_attributes[name];
+            if ( node.e_attributes )
+                delete node.e_attributes[name];
             return;
         }
-        if ( node.rc_attributes && node.rc_attributes[name] ) {
-            let expression = '{{' + node.rc_attributes[name].expression  + '}}';
+        if ( node.e_attributes && node.e_attributes[name] ) {
+            let expression = '{{' + node.e_attributes[name].expression  + '}}';
             if ( expression === tmp.value )
                 return;
         }
-        if ( rc.attributes[name] ) {
-            value = rc.attributes[name].check(node, name);
+        if ( evente.attributes[name] ) {
+            value = evente.attributes[name].check(node, name);
             if ( tmp.value !== value )
                 tmp.value = value;
-            tmp = new rc.attributes[name](node, name, this);
+            tmp = new evente.attributes[name](node, name, this);
         } else {
             if (tmp.value.indexOf('{{') === -1)
                 return;
-            if ( rc.attributes[name] === undefined )
-                tmp = new rc.Attribute(node, name, this);
+            if ( evente.attributes[name] === undefined )
+                tmp = new evente.Attribute(node, name, this);
         }
-        if ( node.rc_attributes === undefined )
-            node.rc_attributes = {};
-        node.rc_attributes[name] = tmp;
+        if ( node.e_attributes === undefined )
+            node.e_attributes = {};
+        node.e_attributes[name] = tmp;
     }
 
     updateLinks(node) {
         var i, j, tmp,
             set = new Set();
-        for ( i in node.rc_attributes ) {
-            tmp = node.rc_attributes[i].getLinks();
+        for ( i in node.e_attributes ) {
+            tmp = node.e_attributes[i].getLinks();
             for ( j in tmp )
                 set.add(tmp[j]);
         }
-        tmp = node.rc_links || new Set();
+        tmp = node.e_links || new Set();
         for ( i of tmp ) {
             if ( !set.has(i) )
                 this.unlink(node, i)
@@ -193,15 +192,15 @@ rc.Model = class Model {
         if ( this.links[property] === undefined )
             this.links[property] = new Set();
         this.links[property].add(node);
-        if ( node.rc_links === undefined )
-            node.rc_links = new Set();
-        node.rc_links.add(property);
+        if ( node.e_links === undefined )
+            node.e_links = new Set();
+        node.e_links.add(property);
     }
 
     unlink(node, property) {
         if ( property === undefined ) {
-            if ( node.rc_links !== undefined ) {
-                for ( let link of node.rc_links )
+            if ( node.e_links !== undefined ) {
+                for ( let link of node.e_links )
                     this.unlink(node, link);
             }
             let i, nodes = node.childNodes;
@@ -213,17 +212,17 @@ rc.Model = class Model {
                 if ( this.links[property].size === 0 )
                     delete this.links[property];
             }
-            if ( node.rc_links !== undefined ) {
-                node.rc_links.delete(property);
-                if ( node.rc_links.size === 0 )
-                    delete node.rc_links;
+            if ( node.e_links !== undefined ) {
+                node.e_links.delete(property);
+                if ( node.e_links.size === 0 )
+                    delete node.e_links;
             }
         }
     }
 
 }
 
-rc.Model.eventHander = function(event) {
+evente.Model.eventHander = function(event) {
     if (
         !(event.target instanceof HTMLInputElement) &&
         !(event.target instanceof HTMLButtonElement ) &&
@@ -231,12 +230,12 @@ rc.Model.eventHander = function(event) {
         !(event.target instanceof HTMLSelectElement)
     )
         return;
-    if ( event.target.rc_attributes === undefined || event.target.rc_attributes['rc-model'] === undefined )
+    if ( event.target.e_attributes === undefined || event.target.e_attributes['e-model'] === undefined )
         return;
-    let rc_model = event.target.rc_attributes['rc-model'],
-        value_old = rc_model.get(),
+    let model = event.target.e_attributes['e-model'],
+        value_old = model.get(),
         value_new = event.target.value;
     if ( value_old === value_new )
         return;
-    rc_model.set(value_new);
+    model.set(value_new);
 }
