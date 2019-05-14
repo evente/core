@@ -1,15 +1,17 @@
-[![Maintainability](https://api.codeclimate.com/v1/badges/6b8b7666060ce232cca8/maintainability)](https://codeclimate.com/github/evnte/core/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/6b8b7666060ce232cca8/test_coverage)](https://codeclimate.com/github/evente/core/test_coverage)
-[![Build Status](https://travis-ci.org/evente/core.svg?branch=master)](https://travis-ci.org/evente/core)
+[![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evnte/core/maintainability)
+[![Test Coverage](https://badgen.net/codeclimate/coverage/evente/core)](https://codeclimate.com/github/evente/core/test_coverage)
+[![Build Status](https://badgen.net/travis/evente/core)](https://travis-ci.org/evente/core)
+![Size](https://badgen.net/badgesize/normal/evente/core/master/dist/evente.min.js)
+![GZip Size](https://badgen.net/badgesize/gzip/evente/core/master/dist/evente.min.js)
 
-`Evente` - javascript library for building reactive web applications. Library is suitable for writing web applications from scratch and also for using in existing applications. And it is very small - `21k minified` and `6.2k gzipped` so it cause very low impact on the time of application loading.
+`Evente` - javascript library for building reactive web applications. Library is suitable for writing web applications from scratch and also for using in existing applications. Its size is very small and cause low impact on the loading time.
 
 # Features
 - `jQuery`-like objects with subset of well known methods: `addClass`, `attr`, `closest`, `contains`, `end`, `find`, `get`, `hasClass`, `html`, `is`, `parent`, `removeClass`, `text`, `toggleClass`, `val`
 - Custom listeners for `get`, `set` or `delete` operations with model properties
 - Two way data binding
 - Expressions with pipes for output modifications
-- Working with HTTP resources using `fetch` and `promise`s
+- Working with HTTP resources using `fetch` and `promise`
 - Routing
 
 # Getting started

@@ -1,11 +1,10 @@
-var evente = function(selector) {
-    return new evente.Selector(selector);
-}
+var evente = function() {}
 
 evente.attributes = {};
 evente.models = [];
 evente.routers = [];
 evente.strings = [];
+
 evente.pipes = {
     empty: function(params) {
         return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
@@ -84,12 +83,10 @@ evente.__proto__.route = function() {
         evente.routers[i].handle(location.href);
 }
 
-if ( typeof module !== 'undefined' ) {
+if ( typeof $ === 'undefined' )
+    var $ = function(selector) { return new evente.Selector(selector); }
+
+if ( typeof module !== 'undefined' )
     module.exports = evente;
-} else {
-    if ( typeof e === 'undefined' )
-        var e = evente;
-    if ( typeof $ === 'undefined' )
-        var $ = evente;
+else
     window.addEventListener('popstate', evente.route);
-}

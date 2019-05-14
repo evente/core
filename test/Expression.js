@@ -4,7 +4,8 @@ html_expression =
     '<div id="simple">{{ 2 * a + b - c }} = 1</div>' +
     '<div id="brackets">{{ 2 * (a + b) - c / 2 }}</div>' +
     '<div id="booleans">{{ ( a || b ) && c && !d }}</div>' +
-    '<div id="index">{{ items[id + 1].name }}</div>' +
+    '<div id="index_property">{{ items[id + 1].name }}</div>' +
+    '<div id="add_index_property">{{ "name: " + items[id + 1].name }}</div>' +
     '<div id="filter_if">{{ a == b | if:a + " is equal " + b }}</div>' +
     '<div id="filter_min_max">{{ numbers | min }}...{{ numbers | max }}</div>' +
     '';
@@ -33,7 +34,13 @@ describe('Expression class', () => {
     test('Index and property', () => {
         document.body.innerHTML = html_expression;
         let model = new evente.Model('body', {id: 0, items: {1: {name: "one"}}});
-        expect(document.getElementById('index').innerHTML).toBe("one");
+        expect(document.getElementById('index_property').innerHTML).toBe("one");
+    });
+
+    test('Adding with index and property', () => {
+        document.body.innerHTML = html_expression;
+        let model = new evente.Model('body', {id: 0, items: {1: {name: "one"}}});
+        expect(document.getElementById('add_index_property').innerHTML).toBe("name: one");
     });
 
     test('Filter if', () => {

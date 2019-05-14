@@ -58,7 +58,7 @@ evente.Expression = class {
                     case 'value':
                         value = this[property ? 'property' : 'eval'](model, item.params[0]);
                         break;
-                    case 'property':
+                    case '.':
                         if ( property ) {
                             value = this.property(model, item.params[0]);
                             value = value !== undefined ? value + '.' + item.params[1] : undefined;
@@ -67,12 +67,12 @@ evente.Expression = class {
                             value = value !== undefined ? value.getField(item.params[1]) : undefined;
                         }
                         break;
-                    case 'index':
+                    case '[]':
                         value = item.params[0] + '.' + this.eval(model, item.params[1]);
                         if ( !property )
                             value = model.get(value);
                         break;
-                    case 'pipe':
+                    case '|':
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
@@ -103,7 +103,7 @@ evente.Expression = class {
                 break;
             default:
                 switch ( item.type ) {
-                    case 'property':
+                    case '.':
                         links.push(...this.getLinks(item.params[0]));
                         break;
                     default:
@@ -247,7 +247,7 @@ evente.Expression = class {
                         break;
                     if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations[token].priority )
                         item = { type: token, params: [ item ] };
-                    if ( evente.Expression.operations[item.type].priority < evente.Expression.operations[token].priority )
+                    else
                         item.params.push(this.parse_tree(
                             tokens,
                             { type: token, params: [ item.params.pop() ] }
@@ -262,10 +262,10 @@ evente.Expression = class {
                     return item;
                 case '[':
                     if ( item.type === undefined ) {
-                        item.type = 'index';
+                        item.type = '[]';
                         item.params.push(this.parse_tree(tokens));
                     } else
-                        item.params.push( { type: 'index', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
+                        item.params.push( { type: '[]', params: [ item.params.pop(), this.parse_tree(tokens) ] } );
                     break;
                 case ']':
                     if ( item.type === undefined )
@@ -274,7 +274,7 @@ evente.Expression = class {
                 case '|':
                     if ( item.type !== undefined )
                         item = { params: [ item ] };
-                    item.type = 'pipe';
+                    item.type = '|';
                     item.name = tokens.shift();
                     token = tokens.shift();
                     while ( token === ':' ) {
@@ -295,10 +295,14 @@ evente.Expression = class {
                     if ( token[0] == '.' ) {
                         token = token.substr(1);
                         if ( item.type === undefined ) {
-                            item.type = 'property';
+                            item.type = '.';
                             item.params.push(token);
-                        } else
-                            item = {type: 'property', params: [item, token]};
+                        } else {
+                            if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations['.'].priority )
+                                item = {type: '.', params: [item, token]};
+                            else
+                                item.params.push({type: '.', params: [item.params.pop(), token]});
+                        }
                     } else {
                         tmp = parseFloat(token);
                         if ( !isNaN(tmp) )
@@ -324,6 +328,7 @@ evente.Expression.operations = {
     '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
     '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
     '!': { priority: 4 },
-    'property': { priority: 5 },
-    'pipe': { priority: 6 },
+    '.': { priority: 5 },
+    '[]': { priority: 6 },
+    '|': { priority: 7 },
 };

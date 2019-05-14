@@ -38,39 +38,46 @@ describe('Selector class', () => {
 describe('DOM selectors', () => {
 
     test('Select elements by tag', () => {
-        expect(evente('body')).toHaveLength(1);
+        let selector = new evente.Selector('body');
+        expect(selector).toHaveLength(1);
     });
 
     test('Get NodeElement from selection by index', () => {
+        let selector = new evente.Selector('body');
         let expected = document.body;
-        expect(evente('body').get(0)).toBe(expected);
+        expect(selector.get(0)).toBe(expected);
     });
 
     test('Get parents of selected elements', () => {
-        let divs = evente('div');
-        let expected = new evente.Selector([document.body, document.body], divs);
-        expect(divs.parent()).toEqual(expected);
+        let selector = new evente.Selector('div');
+        let expected = new evente.Selector([document.body, document.body], selector);
+        expect(selector.parent()).toEqual(expected);
     });
 
     test('Get parents of empty selection', () => {
-        expect(evente('span').parent()).toBeUndefined();
+        let selector = new evente.Selector('span');
+        expect(selector.parent()).toBeUndefined();
     });
 
     test('Find elements inside selection', () => {
-        expect(evente('body').find('div')).toHaveLength(2);
+        let selector = new evente.Selector('body');
+        expect(selector.find('div')).toHaveLength(2);
     });
 
     test('All of selected elements matches selector', () => {
-        expect(evente('div').is('.test')).toBe(true);
+        let selector = new evente.Selector('div');
+        expect(selector.is('.test')).toBe(true);
     });
 
     test('Not all of selected elements matches selector', () => {
-        expect(evente('div').is('.test1', true)).toBe(false);
+        let selector = new evente.Selector('div');
+        expect(selector.is('.test1', true)).toBe(false);
     });
 
     test('One of selected elements matches selector', () => {
-        expect(evente('div').is('#first')).toBe(true);
-        expect(evente('div').is('.test#second')).toBe(true);
+        let selector = new evente.Selector('div');
+        expect(selector.is('#first')).toBe(true);
+        expect(selector.is('.test#second')).toBe(true);
     });
 
 });
@@ -78,25 +85,30 @@ describe('DOM selectors', () => {
 describe('Class manipulation', () => {
 
     test('All of selected elements has class', () => {
-        expect(evente('div').hasClass('test', true)).toBe(true);
+        let selector = new evente.Selector('div');
+        expect(selector.hasClass('test', true)).toBe(true);
     });
 
     test('Not all of selected elements has class', () => {
-        expect(evente('div').hasClass('test1', true)).toBe(false);
+        let selector = new evente.Selector('div');
+        expect(selector.hasClass('test1', true)).toBe(false);
     });
 
     test('One of selected elements has class', () => {
-        expect(evente('div').hasClass('test1')).toBe(true);
-        expect(evente('div').hasClass('test2')).toBe(true);
+        let selector = new evente.Selector('div');
+        expect(selector.hasClass('test1')).toBe(true);
+        expect(selector.hasClass('test2')).toBe(true);
     });
 
     test('None of selected elements has class', () => {
-        expect(evente('div').hasClass('test3')).toBe(false);
+        let selector = new evente.Selector('div');
+        expect(selector.hasClass('test3')).toBe(false);
     });
 
     test('Add class to elements', () => {
+        let selector = new evente.Selector('body');
         expect(
-            evente('body')
+            selector
                 .find('div')
                     .addClass('testClass1 testClass2')
                     .end()
@@ -105,8 +117,9 @@ describe('Class manipulation', () => {
     });
 
     test('Remove class from elements', () => {
+        let selector = new evente.Selector('body');
         expect(
-            evente('body')
+            selector
                 .find('div')
                     .removeClass(['testClass1', 'testClass2'])
                     .end()
@@ -115,8 +128,9 @@ describe('Class manipulation', () => {
     });
 
     test('Toggle class in selected elements', () => {
+        let selector = new evente.Selector('body');
         expect(
-            evente('body')
+            selector
                 .find('div')
                     .toggleClass('test')
                     .end()
@@ -129,56 +143,66 @@ describe('Class manipulation', () => {
 describe('Attributes manipulation', () => {
 
     test('Get elements text', () => {
+        let selector = new evente.Selector('div');
         let expected = ['', ''];
-        expect(evente('div').text()).toEqual(expected);
+        expect(selector.text()).toEqual(expected);
     });
 
     test('Set element text', () => {
+        let selector = new evente.Selector('.test2');
         expect(
-            evente('.test2')
+            selector
                 .text('text')
                 .text()
         ).toBe('text');
     });
 
     test('Get element html code', () => {
-        expect(evente('.test1').html()).toBe('<input>');
+        let selector = new evente.Selector('.test1');
+        expect(selector.html()).toBe('<input>');
     });
 
     test('Set element html code', () => {
+        let selector = new evente.Selector('.test2');
         expect(
-            evente('.test2')
+            selector
                 .html('<span>text</span>')
                 .html()
         ).toBe('<span>text</span>');
     });
 
     test('Get undefined attribute', () => {
-        expect(evente('.test1').attr('data-model')).toBeUndefined();
+        let selector = new evente.Selector('.test1');
+        expect(selector.attr('data-model')).toBeUndefined();
     });
 
     test('Set attribute', () => {
+        let selector = new evente.Selector('.test1');
         expect(
-            evente('.test1')
+            selector
                 .attr('data-model', 'text')
                 .attr('data-model')
         ).toBe('text');
     });
 
     test('Get value of HTMLInputElement', () => {
-        expect(evente('input').val()).toBe('');
+        let selector = new evente.Selector('input');
+        expect(selector.val()).toBe('');
     });
 
     test('Get value of non HTMLInputElement', () => {
-        expect(evente('.test1').val()).toBeUndefined();
+        let selector = new evente.Selector('.test1');
+        expect(selector.val()).toBeUndefined();
     });
 
     test('Set value of HTMLInputElement', () => {
-        expect(evente('input').val('text').val()).toBe('text');
+        let selector = new evente.Selector('input');
+        expect(selector.val('text').val()).toBe('text');
     });
 
     test('Set value of non HTMLInputElement', () => {
-        expect(evente('.test1').val('text').val()).toBeUndefined();
+        let selector = new evente.Selector('.test1');
+        expect(selector.val('text').val()).toBeUndefined();
     });
 
 });
@@ -186,9 +210,12 @@ describe('Attributes manipulation', () => {
 describe('Utilites', () => {
 
     test('Node containing', () => {
-        let node = evente('input')[0];
-        expect(evente('.test1').contains(node)).toBe(true);
-        expect(evente('.test2').contains(node)).toBe(false);
+        let selector = new evente.Selector('input');
+        let node = selector[0];
+        selector = new evente.Selector('.test1');
+        expect(selector.contains(node)).toBe(true);
+        selector = new evente.Selector('.test2');
+        expect(selector.contains(node)).toBe(false);
     });
 
 });
