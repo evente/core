@@ -97,15 +97,17 @@ evente.__proto__.getAttributes = () => {
 
 evente.__proto__.getModel = function(node) {
     for ( var i in this.models ) {
-        if ( this.models[i].selector.contains(node) )
-            return this.models[i];
+        let model =  this.models[i];
+        if ( model.element === node || model.element.contains(node) )
+            return model;
     }
 }
 
 evente.__proto__.getRouter = function(node) {
     for ( var i in this.routers ) {
-        if ( this.routers[i].selector.contains(node) )
-            return this.routers[i];
+        let router = this.routers[i];
+        if ( router.element === node || router.element.contains(node) )
+            return router;
     }
 }
 
@@ -493,7 +495,7 @@ evente.App = class {
 
     constructor(selector, data, options) {
         options = {
-            clean: true,
+            clean: false,
             router: true,
             run: false,
             ...options
@@ -502,7 +504,7 @@ evente.App = class {
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new evente.Router(this.model.selector);
+            this.router = new evente.Router(this.model.element);
         if ( options.run )
             this.run();
     }
@@ -779,7 +781,7 @@ evente.Model = class {
         this.proxy = new Proxy({$: ''}, this.proxyHandler);
         this.listeners = { get: {}, set: {}, delete: {} };
         this.links = {};
-        this.selector = new evente.Selector(selector);
+        this.element = document.querySelector(selector);
         if ( options.init )
             this.init();
     }
@@ -791,8 +793,7 @@ evente.Model = class {
     set data(value) {
         value.strings = evente.strings;
         this.shadow = value;
-        for ( let i in this.selector )
-            this.parseNode(this.selector.get(i), '');
+        this.parseNode(this.element);
     }
 
     get(property) {
@@ -804,12 +805,8 @@ evente.Model = class {
     }
 
     init() {
-        let i, element;
-        for ( i in this.selector ) {
-            element = this.selector.get(i);
-            element.addEventListener('input', evente.Model.eventHander, true);
-            this.parseNode(element);
-        }
+        this.element.addEventListener('input', evente.Model.eventHander, true);
+        this.parseNode(this.element);
     }
 
     addListener(event, property, listener) {
@@ -1177,19 +1174,11 @@ evente.Resource.headers = {};
 
 evente.Router = class {
 
-    constructor(selector) {
+    constructor(element) {
         evente.routers.push(this);
         this.routes = {};
-        this.selector = selector;
-        this.init();
-    }
-
-    init() {
-        let i, node;
-        for ( i in this.selector ) {
-            node = this.selector.get(i);
-            node.addEventListener('click', evente.Router.eventHander, true);
-        }
+        this.element = element;
+        this.element.addEventListener('click', evente.Router.eventHander, true);
     }
 
     add(route, callback, params) {

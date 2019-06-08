@@ -4,7 +4,7 @@ evente.App = class {
 
     constructor(selector, data, options) {
         options = {
-            clean: true,
+            clean: false,
             router: true,
             run: false,
             ...options
@@ -13,7 +13,7 @@ evente.App = class {
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new evente.Router(this.model.selector);
+            this.router = new evente.Router(this.model.element);
         if ( options.run )
             this.run();
     }

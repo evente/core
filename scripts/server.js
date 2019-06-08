@@ -36,10 +36,12 @@ http.createServer((req, res) => {
     console.log('Listening on http://%s:%d', hostname, port);
 });
 
+let timeout = 0;
 function watch(path) {
     fs.watch(path, { recursive: true }, function(event) {
         console.log('Watch event:', event, path, ', rebuild started...');
-        setTimeout(minify, 200);
+        if ( !timeout )
+            timeout = setTimeout(() => { minify(); timeout = 0; }, 200);
     });
     if ( process.platform === 'freebsd' && fs.statSync(path).isDirectory() ) {
         fs.readdirSync(path).forEach(file => {

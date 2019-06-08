@@ -10,7 +10,7 @@ evente.Model = class {
         this.proxy = new Proxy({$: ''}, this.proxyHandler);
         this.listeners = { get: {}, set: {}, delete: {} };
         this.links = {};
-        this.selector = new evente.Selector(selector);
+        this.element = document.querySelector(selector);
         if ( options.init )
             this.init();
     }
@@ -22,8 +22,7 @@ evente.Model = class {
     set data(value) {
         value.strings = evente.strings;
         this.shadow = value;
-        for ( let i in this.selector )
-            this.parseNode(this.selector.get(i), '');
+        this.parseNode(this.element);
     }
 
     get(property) {
@@ -35,12 +34,8 @@ evente.Model = class {
     }
 
     init() {
-        let i, element;
-        for ( i in this.selector ) {
-            element = this.selector.get(i);
-            element.addEventListener('input', evente.Model.eventHander, true);
-            this.parseNode(element);
-        }
+        this.element.addEventListener('input', evente.Model.eventHander, true);
+        this.parseNode(this.element);
     }
 
     addListener(event, property, listener) {

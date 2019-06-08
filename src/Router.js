@@ -2,19 +2,11 @@ var evente = require('./evente.js');
 
 evente.Router = class {
 
-    constructor(selector) {
+    constructor(element) {
         evente.routers.push(this);
         this.routes = {};
-        this.selector = selector;
-        this.init();
-    }
-
-    init() {
-        let i, node;
-        for ( i in this.selector ) {
-            node = this.selector.get(i);
-            node.addEventListener('click', evente.Router.eventHander, true);
-        }
+        this.element = element;
+        this.element.addEventListener('click', evente.Router.eventHander, true);
     }
 
     add(route, callback, params) {

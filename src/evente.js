@@ -57,15 +57,17 @@ evente.__proto__.getAttributes = () => {
 
 evente.__proto__.getModel = function(node) {
     for ( var i in this.models ) {
-        if ( this.models[i].selector.contains(node) )
-            return this.models[i];
+        let model =  this.models[i];
+        if ( model.element === node || model.element.contains(node) )
+            return model;
     }
 }
 
 evente.__proto__.getRouter = function(node) {
     for ( var i in this.routers ) {
-        if ( this.routers[i].selector.contains(node) )
-            return this.routers[i];
+        let router = this.routers[i];
+        if ( router.element === node || router.element.contains(node) )
+            return router;
     }
 }
 

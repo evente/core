@@ -11,11 +11,11 @@ describe('App class', () => {
 
     test('App object creation', () => {
         let app = new evente.App('body');
-        expect(app.model.selector).toHaveLength(1);
+        expect(app.model.element).toBe(document.body);
     });
 
     test('Removing comments and empty text nodes', () => {
-        let app = new evente.App('body', {}, {run: true});
+        let app = new evente.App('body', {}, {clean: true, run: true});
         expect(document.body.childNodes).toHaveLength(2);
     });
 
