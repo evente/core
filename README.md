@@ -1,4 +1,4 @@
-[![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evnte/core/maintainability)
+[![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evente/core/maintainability)
 [![Test Coverage](https://badgen.net/codeclimate/coverage/evente/core)](https://codeclimate.com/github/evente/core/test_coverage)
 [![Build Status](https://badgen.net/travis/evente/core)](https://travis-ci.org/evente/core)
 ![Size](https://badgen.net/badgesize/normal/evente/core/master/dist/evente.min.js)
@@ -62,7 +62,7 @@ Try it on [CodePen](https://codepen.io/apoprotsky/pen/XOpzxV). Full application 
             return parseFloat(params[0]).toFixed(params[1] !== undefined ? params[1] : 2);
         }
         // Init
-        var app = new evente('body', {
+        var app = evente('body', {
             amount: '1',
             currency: 'USD',
             precision: 2
