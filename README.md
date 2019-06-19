@@ -62,16 +62,13 @@ Try it on [CodePen](https://codepen.io/apoprotsky/pen/XOpzxV). Full application 
             return parseFloat(params[0]).toFixed(params[1] !== undefined ? params[1] : 2);
         }
         // Init
-        var app = new evente.App('body', {
+        var app = new evente('body', {
             amount: '1',
             currency: 'USD',
             precision: 2
         });
-        // Run
-        app.run();
         // Load data
-        var resource = new evente.Resource('https://api.exchangeratesapi.io/latest');
-        resource.get().then(data => {
+        evente.resource('https://api.exchangeratesapi.io/latest').get().then(data => {
             data.rates[data.base] = 1;
             app.data.base = data.base;
             app.data.rates = data.rates;

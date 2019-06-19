@@ -1,4 +1,4 @@
-var evente = require('../scripts/test.js');
+require('../src/Object');
 
 describe('Object class extensions', () => {
 

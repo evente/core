@@ -1,14 +1,25 @@
-var evente = require('./evente.js');
+/**
+ * Evente Router class
+ */
+class EventeRouter {
 
-evente.Router = class {
-
-    constructor(element) {
-        evente.routers.push(this);
+    /**
+     * 
+     * @param {Node} node 
+     */
+    constructor(node) {
+        EventeRouter.routers.push(this);
         this.routes = {};
-        this.element = element;
-        this.element.addEventListener('click', evente.Router.eventHander, true);
+        this.node = node;
+        this.node.addEventListener('click', EventeRouter.clickHander, true);
     }
 
+    /**
+     * Add route
+     * @param {string} route Route pattern
+     * @param {Function} callback Callback function
+     * @param {*} params Parameters passed to callback function
+     */
     add(route, callback, params) {
         route = this.normalize(route);
         this.routes[route] = {
@@ -18,17 +29,32 @@ evente.Router = class {
         };
     }
 
+    /**
+     * Remove route
+     * @param {string} route Route pattern
+     */
     remove(route) {
         route = this.normalize(route);
         delete this.routes[route];
     }
 
+    /**
+     * Trigger route handling
+     * @param {string} route Route
+     * @param {boolean} push Flag to push route in history
+     */
     trigger(route, push) {
         if ( route === undefined )
             route = location.pathname;
         this.handle(route, push);
     }
 
+    /**
+     * Handle route change
+     * @param {string} route Route
+     * @param {boolean} push Flag to push route in history
+     * @returns {boolean}
+     */
     handle(route, push) {
         route = this.normalize(route);
         if ( this.routes[route] !== undefined ) {
@@ -66,6 +92,11 @@ evente.Router = class {
         return Object.keys(routes).length > 0;
     }
 
+    /**
+     * Normalize route form
+     * @param {string} route Route
+     * @returns {string}
+     */
     normalize(route) {
         if ( route.startsWith(location.origin) )
             route = route.substr(location.origin.length);
@@ -78,19 +109,49 @@ evente.Router = class {
         return route;
     }
 
+    /**
+     * Get router by DOM node
+     * @param {Node} node DOM node
+     * @returns {EventeRouter}
+     */
+    static getRouter(node) {
+        for ( let i in EventeRouter.routers ) {
+            let router = EventeRouter.routers[i];
+            if ( router.node === node || router.node.contains(node) )
+                return router;
+        }
+    }
+
+    /**
+     * Handle clck event
+     * @param {Event} event Event object
+     */
+    static clickHander(event) {
+        let target = event.target;
+        while ( !(target instanceof HTMLAnchorElement) ) {
+            target = target.parentNode;
+            if ( target instanceof HTMLDocument )
+                return;
+        }
+        let router = EventeRouter.getRouter(target);
+        if ( !router )
+            return;
+        let route = target.getAttribute('href');
+        if ( route && router.handle(route, true) )
+            event.preventDefault();
+    }
+
+    /**
+     * Handle URL change
+     */
+    static popstateHandler() {
+        for ( let i in EventeRouter.routers )
+        EventeRouter.routers[i].handle(location.href);
+    }
+
 }
 
-evente.Router.eventHander = function(event) {
-    let target = event.target;
-    while ( !(target instanceof HTMLAnchorElement) ) {
-        target = target.parentNode;
-        if ( target instanceof HTMLDocument )
-            return;
-    }
-    let router = evente.getRouter(target);
-    if ( !router )
-        return;
-    let route = target.getAttribute('href');
-    if ( route && router.handle(route, true) )
-        event.preventDefault();
-}
+EventeRouter.routers = [];
+window.addEventListener('popstate', EventeRouter.popstateHandler);
+
+module.exports = EventeRouter;

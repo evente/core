@@ -38,3 +38,5 @@ Object.defineProperty(
         }
     }
 );
+
+module.exports = null;

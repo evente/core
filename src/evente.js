@@ -1,94 +1,37 @@
-var evente = function() {}
+const EventeApplication = require('./EventeApplication');
+const EventePipes = require('./EventePipes');
+const EventeResource = require('./EventeResource');
 
-evente.attributes = {};
-evente.models = [];
-evente.routers = [];
-evente.strings = [];
+/**
+ * Create new Evente application
+ * @param {string} selector Selector for application root element
+ * @param {*} [data={}] Initial data
+ * @param {Object} [options] Aplication creation options
+ * @param {boolean} [options.clean=false] Remove Comment and empty Text nodes from DOM
+ * @param {boolean} [options.router=true] Use router
+ * @param {boolean} [options.run=true] Run immediately after create
+ * @returns {EventeApplication}
+ */
+const evente = function(selector, data, options) {
+    return new EventeApplication(selector, data, options);
+};
 
-evente.pipes = {
-    empty: function(params) {
-        return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
-    },
-    if: function(params) {
-        var tmp = parseFloat(params[0]);
-        if ( !isNaN(tmp) )
-            params[0] = tmp;
-        return params[0] ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
-    },
-    sort: function(params) {
-        if ( params[0] === undefined || params[0] === null )
-            return '';
-        let values = params[0] instanceof Array ? params[0].slice() : params[0].keys;
-        if ( values === undefined )
-            return '';
-        return values.sort();
-    },
-    reverse: function(params) {
-        let tmp = evente.pipes.sort(params);
-        return tmp ? tmp.reverse() : '';
-    },
-    min: function(params) {
-        let tmp = evente.pipes.sort(params);
-        return tmp ? tmp[0] : '';
-    },
-    max: function(params) {
-        let tmp = evente.pipes.reverse(params);
-        return tmp ? tmp[0] : '';
-    }
+/**
+ * Get registered pipes
+ * @returns {EventePipes}
+ */
+Object.defineProperty(evente, 'pipes', {
+    get: function() { return EventePipes; }
+});
+
+/**
+ * Create EventeResource instance
+ * @param {string} url Resource URL
+ * @param {string} [type=json] Resource content type
+ * @returns {EventeResource}
+ */
+evente.resource = function(url, type) {
+    return new EventeResource(url, type);
 }
 
-evente._attributes = [];
-evente.__proto__.getAttributes = () => {
-    if ( evente._attributes.length !== Object.keys(evente.attributes).length ) {
-        let tmp = [];
-        for ( let i in evente.attributes )
-            tmp.push({ name: i, priority: evente.attributes[i].priority});
-        tmp.sort((a,b) => {
-            if ( a.priority > b.priority )
-                return -1;
-            if ( a.priority < b.priority )
-                return 1;
-            return 0;
-        })
-        evente._attributes = tmp;
-    }
-    return evente._attributes;
-}
-
-evente.__proto__.getModel = function(node) {
-    for ( var i in this.models ) {
-        let model =  this.models[i];
-        if ( model.element === node || model.element.contains(node) )
-            return model;
-    }
-}
-
-evente.__proto__.getRouter = function(node) {
-    for ( var i in this.routers ) {
-        let router = this.routers[i];
-        if ( router.element === node || router.element.contains(node) )
-            return router;
-    }
-}
-
-evente.__proto__.getStringIndex = function(string) {
-    var index = evente.strings.indexOf(string);
-    if ( index === -1 ) {
-        evente.strings.push(string);
-        index = evente.strings.indexOf(string);
-    }
-    return index;
-}
-
-evente.__proto__.route = function() {
-    for ( let i in evente.routers )
-        evente.routers[i].handle(location.href);
-}
-
-if ( typeof $ === 'undefined' )
-    var $ = function(selector) { return new evente.Selector(selector); }
-
-if ( typeof module !== 'undefined' )
-    module.exports = evente;
-else
-    window.addEventListener('popstate', evente.route);
+module.exports = evente;

@@ -1,12 +1,27 @@
-var evente = require('./evente.js');
+const EventeModel = require('./EventeModel');
+const EventePipes = require('./EventePipes');
+const EventeStrings = require('./EventeStrings');
 
-evente.Expression = class {
+/**
+ * Evente Expression class
+ */
+class EventeExpression {
 
+    /**
+     * @param {string} string 
+     */
     constructor(string) {
         this.expression = string;
         this.tree = this.parse(string.trim());
     }
 
+    /**
+     * Eveluate expression value or path
+     * @param {EventeModel} model EventeModel object
+     * @param {*} [item] Abstract Syntax Tree item
+     * @param {boolean} [property] Flag to get path in model data
+     * @returns {*}
+     */
     eval(model, item, property) {
         if ( item === undefined )
             item = this.tree;
@@ -33,7 +48,7 @@ evente.Expression = class {
                                 if ( !isNaN(number) )
                                     tmp = number;
                             }
-                            value = value === undefined ? tmp : evente.Expression.operations[item.type].func(value, tmp);
+                            value = value === undefined ? tmp : EventeExpression.operations[item.type].func(value, tmp);
                         }
                         break;
                     case '&':
@@ -48,7 +63,7 @@ evente.Expression = class {
                                 tmp = number;
                             value.push(tmp);
                             if ( value.length > 1 )
-                                value = [ evente.Expression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ EventeExpression.operations[item.type].func(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -76,17 +91,28 @@ evente.Expression = class {
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
-                        value = evente.pipes[item.name](params);
+                        value = EventePipes[item.name](params);
                         break;
                 }
         }
         return value;
     }
 
+    /**
+     * Get path in model data
+     * @param {EventeModel} model EventeModel object
+     * @param {*} [item] Abstract Syntax Tree item
+     * @returns {string}
+     */
     property(model, item) {
         return this.eval(model, item, true);
     }
 
+    /**
+     * Get dependencies of Abstract Syntax Tree
+     * @param {*} item Abstract Syntax Tree item
+     * @returns {Array<string>}
+     */
     getLinks(item) {
         if ( item === undefined )
             item = this.tree;
@@ -114,15 +140,26 @@ evente.Expression = class {
         return links;
     }
 
+    /**
+     * Parse expression into Abstract Syntax Tree
+     * @private
+     * @param {string} data Expression string
+     * @returns {Object}
+     */
     parse(data) {
         data = this.parse_unclosed(data);
         data = this.parse_strings(data);
         data = this.parse_operations(data);
         this.expression = data;
-        data = this.parse_tokens(data);
-        return this.parse_tree(data);
+        return this.parse_tree(this.parse_tokens(data));
     }
 
+    /**
+     * Parse expression parts not in double braces
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_unclosed(string) {
         let pos = 0,
             tmp_string = '',
@@ -140,7 +177,7 @@ evente.Expression = class {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos);
-                tmp_string += 'strings.' + evente.getStringIndex(tmp) + ' + ';
+                tmp_string += 'strings.' + EventeStrings.getIndex(tmp) + ' + ';
                 pos = match.index;
             }
             tmp = match[0].substr(2, match[0].length - 4).trim();
@@ -152,7 +189,7 @@ evente.Expression = class {
         }
         tmp = string.substr(pos);
         if ( tmp.length )
-            tmp_string += 'strings.' + evente.getStringIndex(tmp);
+            tmp_string += 'strings.' + EventeStrings.getIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
         if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
@@ -160,6 +197,12 @@ evente.Expression = class {
         return tmp_string;
     }
 
+    /**
+     * Parse strings of expression into model fields
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_strings(string) {
         let result = '',
             pos = 0,
@@ -174,7 +217,7 @@ evente.Expression = class {
             } else {
                 if ( str.delim === match[0] ) {
                     str.string = string.substr(str.start, match.index - str.start);
-                    str.index = evente.getStringIndex(str.string);
+                    str.index = EventeStrings.getIndex(str.string);
                     result += 'strings.' + str.index;
                     str.start = 0;
                 }
@@ -187,6 +230,12 @@ evente.Expression = class {
         return result;
     }
 
+    /**
+     * Parse double symbol operators
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_operations(string) {
         string = string.replace(/&&/g, '&');
         string = string.replace(/\|\|/g, '?');
@@ -195,6 +244,12 @@ evente.Expression = class {
         return string;
     }
 
+    /**
+     * Parse expression into tokens
+     * @private
+     * @param {string} string Expression string
+     * @returns {Array<string>}
+     */
     parse_tokens(string) {
         let pos = 0,
             tmp,
@@ -221,6 +276,13 @@ evente.Expression = class {
         return tokens;
     }
 
+    /**
+     * Parse expression tokens into Abstract Syntax Tree
+     * @private
+     * @param {Array<string>} tokens Expression tokens
+     * @param {*} [item] Abstract Syntax Tree item
+     * @returns {Object}
+     */
     parse_tree(tokens, item) {
         if ( item === undefined )
             item = {};
@@ -245,7 +307,7 @@ evente.Expression = class {
                     }
                     if ( item.type === token )
                         break;
-                    if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations[token].priority )
+                    if ( EventeExpression.operations[item.type].priority >= EventeExpression.operations[token].priority )
                         item = { type: token, params: [ item ] };
                     else
                         item.params.push(this.parse_tree(
@@ -298,7 +360,7 @@ evente.Expression = class {
                             item.type = '.';
                             item.params.push(token);
                         } else {
-                            if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations['.'].priority )
+                            if ( EventeExpression.operations[item.type].priority >= EventeExpression.operations['.'].priority )
                                 item = {type: '.', params: [item, token]};
                             else
                                 item.params.push({type: '.', params: [item.params.pop(), token]});
@@ -318,7 +380,7 @@ evente.Expression = class {
 
 };
 
-evente.Expression.operations = {
+EventeExpression.operations = {
     '+': { priority: 0, func: function(a, b) { return a + b; } },
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
@@ -332,3 +394,5 @@ evente.Expression.operations = {
     '[]': { priority: 6 },
     '|': { priority: 7 },
 };
+
+module.exports = EventeExpression;

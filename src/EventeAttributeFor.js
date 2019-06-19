@@ -1,7 +1,16 @@
-var evente = require('./evente.js');
+const EventeAttribute = require('./EventeAttribute');
+const EventeModel = require('./EventeModel');
+const EventeParser = require('./EventeParser');
 
-evente.AttributeFor = class extends evente.Attribute {
+/**
+ * b-for attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeFor extends EventeAttribute {
 
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         let attribute = node.attributes[name],
             match = attribute.value.match(/^{{([a-z0-9_]+)\s+in\s+(.*?)(\s+key\s+([a-z0-9_]+))?}}$/im);
@@ -13,6 +22,9 @@ evente.AttributeFor = class extends evente.Attribute {
         node.innerHTML = '';
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let i, key, child,
             remove = [],
@@ -33,7 +45,7 @@ evente.AttributeFor = class extends evente.Attribute {
                 this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
                 this.node.appendChild(child);
-                this.model.parseNode(child);
+                EventeParser.parseNode(child, this.model);
             }
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
@@ -47,6 +59,13 @@ evente.AttributeFor = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Change alias in expressions on base path
+     * @private
+     * @param {Element|Text} node DOM node
+     * @param {string} alias Alias name
+     * @param {string} base Base path
+     */
     dealias(node, alias, base) {
         let replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
             test = new RegExp('{{');
@@ -58,7 +77,7 @@ evente.AttributeFor = class extends evente.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( !evente.attributes[item.name] && !item.value.match(test) )
+            if ( !EventeAttribute.attributes[item.name] && !item.value.match(test) )
                 continue;
             if ( item.value.match(replace) )
                 item.value = item.value.replace(replace, '$1' + base + '$2');
@@ -78,5 +97,7 @@ evente.AttributeFor = class extends evente.Attribute {
 
 };
 
-evente.AttributeFor.priority = 99;
-evente.attributes['e-for'] = evente.AttributeFor;
+EventeAttributeFor.priority = 99;
+EventeAttribute.attributes['e-for'] = EventeAttributeFor;
+
+module.exports = EventeAttribute;

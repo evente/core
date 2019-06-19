@@ -14,12 +14,16 @@
   },
   "scripts": {
     "build": "node scripts/build.js",
+    "docs": "jsdoc --destination ./docs/ --readme README.md ./src",
     "start": "node scripts/server.js",
-    "test": "jest"
+    "test": "madge -c ./src && jest"
   },
   "dependencies": {},
   "devDependencies": {
+    "@types/jest": "^24.0.15",
     "jest": "^24.5.0",
+    "jsdoc": "^3.6.2",
+    "madge": "^3.4.4",
     "uglify-es": "^3.3.9"
   },
   "jest": {

@@ -1,11 +1,22 @@
-var evente = require('./evente.js');
+const EventeAttribute = require('./EventeAttribute');
+const EventeModel = require('./EventeModel');
 
-evente.AttributeModel = class extends evente.Attribute {
+/**
+ * b-model attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeModel extends EventeAttribute {
 
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         super(node, name, model);
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let value = this.eval(this.model);
         if ( value !== undefined )
@@ -26,15 +37,25 @@ evente.AttributeModel = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Get assotiated model field value
+     * @returns {*}
+     */
     get() {
         let value = this.eval(this.model);
         return value !== undefined ? value : '';
     }
 
+    /**
+     * Set assotiated model field value
+     * @param {*} value
+     */
     set(value) {
         this.model.set(this.property(this.model), value);
     }
 
 };
 
-evente.attributes['e-model'] = evente.AttributeModel;
+EventeAttribute.attributes['e-model'] = EventeAttributeModel;
+
+module.exports = EventeAttribute;

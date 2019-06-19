@@ -30,26 +30,28 @@
                 desc: {{ item.desc }}
             </a>
         </div>
-        <script>var require = () => evente;</script>
         <!-- Extensions -->
         <script src="/src/Object.js"></script>
         <!-- Order has matter -->
         <script src="/src/evente.js"></script>
-        <script src="/src/Expression.js"></script>
-        <script src="/src/Attribute.js"></script>
+        <script src="/src/EventeExpression.js"></script>
+        <script src="/src/EventeAttribute.js"></script>
         <!-- Order has no matter - ordered by name -->
-        <script src="/src/App.js"></script>
-        <script src="/src/AttributeBase.js"></script>
-        <script src="/src/AttributeFor.js"></script>
-        <script src="/src/AttributeHideShow.js"></script>
-        <script src="/src/AttributeModel.js"></script>
-        <script src="/src/Model.js"></script>
-        <script src="/src/ModelProxyHandler.js"></script>
-        <script src="/src/Resource.js"></script>
-        <script src="/src/Router.js"></script>
-        <script src="/src/Selector.js"></script>
+        <script src="/src/EventeApplication.js"></script>
+        <script src="/src/EventeAttributeBase.js"></script>
+        <script src="/src/EventeAttributeFor.js"></script>
+        <script src="/src/EventeAttributeHideShow.js"></script>
+        <script src="/src/EventeAttributeModel.js"></script>
+        <script src="/src/EventeModel.js"></script>
+        <script src="/src/EventeModelProxyHandler.js"></script>
+        <script src="/src/EventeParser.js"></script>
+        <script src="/src/EventePipes.js"></script>
+        <script src="/src/EventeResource.js"></script>
+        <script src="/src/EventeRouter.js"></script>
+        <script src="/src/EventeSelector.js"></script>
+        <script src="/src/EventeStrings.js"></script>
         <script>
-            let app = new evente.App('body', {
+            let app = evente('body', {
                 types: [ 't0', 't1', 't2' ],
                 index: 1,
                 items: [
@@ -59,7 +61,6 @@
                 ],
             });
             app.route('/items/:id', options => { app.data.index = options.id; });
-            app.run();
         </script>
     </body>
 </html>

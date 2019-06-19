@@ -1,6 +1,6 @@
-let fs = require('fs');
-let uglify = require("uglify-es");
-let uglifyOptions = {
+const fs = require('fs');
+const uglify = require("uglify-es");
+const uglifyOptions = {
     compress: {
         drop_console: true,
         global_defs: {
@@ -13,27 +13,30 @@ let uglifyOptions = {
     }
 }
 
-let inputDir = 'src/';
-let outputFile = 'dist/evente.js';
-let outputFileMinified = 'dist/evente.min.js';
-let inputFiles = [
+const inputDir = 'src/';
+const outputFile = 'dist/evente.js';
+const outputFileMinified = 'dist/evente.min.js';
+const inputFiles = [
     // Extensions
     'Object.js',
     // Order has matter
     'evente.js',
-    'Expression.js',
-    'Attribute.js',
+    'EventeExpression.js',
+    'EventeAttribute.js',
     // Order has no matter - ordered by name
-    'App.js',
-    'AttributeBase.js',
-    'AttributeFor.js',
-    'AttributeHideShow.js',
-    'AttributeModel.js',
-    'Model.js',
-    'ModelProxyHandler.js',
-    'Resource.js',
-    'Router.js',
-    'Selector.js',
+    'EventeApplication.js',
+    'EventeAttributeBase.js',
+    'EventeAttributeFor.js',
+    'EventeAttributeHideShow.js',
+    'EventeAttributeModel.js',
+    'EventeModel.js',
+    'EventeModelProxyHandler.js',
+    'EventeParser.js',
+    'EventePipes.js',
+    'EventeResource.js',
+    'EventeRouter.js',
+    'EventeSelector.js',
+    'EventeStrings.js',
 ];
 
 function minify() {
@@ -42,7 +45,8 @@ function minify() {
         console.log(inputDir + file);
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
-    inputCode = inputCode.replace(/var evente = require\('\.\/evente\.js'\);\n?/gm, '');
+    inputCode = inputCode.replace(/const [a-zA-Z]+ = require\('.+'\);\n?/gm, '');
+    inputCode = inputCode.replace(/module.exports = [a-zA-Z]+;\n?/gm, '');
     try {
         fs.writeFileSync(outputFile, inputCode);
         let outputCode = uglify.minify(inputCode, uglifyOptions).code;

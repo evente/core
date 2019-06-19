@@ -38,108 +38,61 @@ Object.defineProperty(
         }
     }
 );
-var evente = function() {}
 
-evente.attributes = {};
-evente.models = [];
-evente.routers = [];
-evente.strings = [];
 
-evente.pipes = {
-    empty: function(params) {
-        return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
-    },
-    if: function(params) {
-        var tmp = parseFloat(params[0]);
-        if ( !isNaN(tmp) )
-            params[0] = tmp;
-        return params[0] ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
-    },
-    sort: function(params) {
-        if ( params[0] === undefined || params[0] === null )
-            return '';
-        let values = params[0] instanceof Array ? params[0].slice() : params[0].keys;
-        if ( values === undefined )
-            return '';
-        return values.sort();
-    },
-    reverse: function(params) {
-        let tmp = evente.pipes.sort(params);
-        return tmp ? tmp.reverse() : '';
-    },
-    min: function(params) {
-        let tmp = evente.pipes.sort(params);
-        return tmp ? tmp[0] : '';
-    },
-    max: function(params) {
-        let tmp = evente.pipes.reverse(params);
-        return tmp ? tmp[0] : '';
-    }
+/**
+ * Create new Evente application
+ * @param {string} selector Selector for application root element
+ * @param {*} [data={}] Initial data
+ * @param {Object} [options] Aplication creation options
+ * @param {boolean} [options.clean=false] Remove Comment and empty Text nodes from DOM
+ * @param {boolean} [options.router=true] Use router
+ * @param {boolean} [options.run=true] Run immediately after create
+ * @returns {EventeApplication}
+ */
+const evente = function(selector, data, options) {
+    return new EventeApplication(selector, data, options);
+};
+
+/**
+ * Get registered pipes
+ * @returns {EventePipes}
+ */
+Object.defineProperty(evente, 'pipes', {
+    get: function() { return EventePipes; }
+});
+
+/**
+ * Create EventeResource instance
+ * @param {string} url Resource URL
+ * @param {string} [type=json] Resource content type
+ * @returns {EventeResource}
+ */
+evente.resource = function(url, type) {
+    return new EventeResource(url, type);
 }
 
-evente._attributes = [];
-evente.__proto__.getAttributes = () => {
-    if ( evente._attributes.length !== Object.keys(evente.attributes).length ) {
-        let tmp = [];
-        for ( let i in evente.attributes )
-            tmp.push({ name: i, priority: evente.attributes[i].priority});
-        tmp.sort((a,b) => {
-            if ( a.priority > b.priority )
-                return -1;
-            if ( a.priority < b.priority )
-                return 1;
-            return 0;
-        })
-        evente._attributes = tmp;
-    }
-    return evente._attributes;
-}
 
-evente.__proto__.getModel = function(node) {
-    for ( var i in this.models ) {
-        let model =  this.models[i];
-        if ( model.element === node || model.element.contains(node) )
-            return model;
-    }
-}
+/**
+ * Evente Expression class
+ */
+class EventeExpression {
 
-evente.__proto__.getRouter = function(node) {
-    for ( var i in this.routers ) {
-        let router = this.routers[i];
-        if ( router.element === node || router.element.contains(node) )
-            return router;
-    }
-}
-
-evente.__proto__.getStringIndex = function(string) {
-    var index = evente.strings.indexOf(string);
-    if ( index === -1 ) {
-        evente.strings.push(string);
-        index = evente.strings.indexOf(string);
-    }
-    return index;
-}
-
-evente.__proto__.route = function() {
-    for ( let i in evente.routers )
-        evente.routers[i].handle(location.href);
-}
-
-if ( typeof $ === 'undefined' )
-    var $ = function(selector) { return new evente.Selector(selector); }
-
-if ( typeof module !== 'undefined' )
-    module.exports = evente;
-else
-    window.addEventListener('popstate', evente.route);
-
-evente.Expression = class {
-
+    /**
+     * @param {string} string 
+     */
     constructor(string) {
         this.expression = string;
         this.tree = this.parse(string.trim());
     }
 
+    /**
+     * Eveluate expression value or path
+     * @param {EventeModel} model EventeModel object
+     * @param {*} [item] Abstract Syntax Tree item
+     * @param {boolean} [property] Flag to get path in model data
+     * @returns {*}
+     */
     eval(model, item, property) {
         if ( item === undefined )
             item = this.tree;
@@ -166,7 +119,7 @@ evente.Expression = class {
                                 if ( !isNaN(number) )
                                     tmp = number;
                             }
-                            value = value === undefined ? tmp : evente.Expression.operations[item.type].func(value, tmp);
+                            value = value === undefined ? tmp : EventeExpression.operations[item.type].func(value, tmp);
                         }
                         break;
                     case '&':
@@ -181,7 +134,7 @@ evente.Expression = class {
                                 tmp = number;
                             value.push(tmp);
                             if ( value.length > 1 )
-                                value = [ evente.Expression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ EventeExpression.operations[item.type].func(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -209,17 +162,28 @@ evente.Expression = class {
                         let params = [];
                         for ( let i in item.params )
                             params.push( this.eval(model, item.params[i] ) );
-                        value = evente.pipes[item.name](params);
+                        value = EventePipes[item.name](params);
                         break;
                 }
         }
         return value;
     }
 
+    /**
+     * Get path in model data
+     * @param {EventeModel} model EventeModel object
+     * @param {*} [item] Abstract Syntax Tree item
+     * @returns {string}
+     */
     property(model, item) {
         return this.eval(model, item, true);
     }
 
+    /**
+     * Get dependencies of Abstract Syntax Tree
+     * @param {*} item Abstract Syntax Tree item
+     * @returns {Array<string>}
+     */
     getLinks(item) {
         if ( item === undefined )
             item = this.tree;
@@ -247,15 +211,26 @@ evente.Expression = class {
         return links;
     }
 
+    /**
+     * Parse expression into Abstract Syntax Tree
+     * @private
+     * @param {string} data Expression string
+     * @returns {Object}
+     */
     parse(data) {
         data = this.parse_unclosed(data);
         data = this.parse_strings(data);
         data = this.parse_operations(data);
         this.expression = data;
-        data = this.parse_tokens(data);
-        return this.parse_tree(data);
+        return this.parse_tree(this.parse_tokens(data));
     }
 
+    /**
+     * Parse expression parts not in double braces
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_unclosed(string) {
         let pos = 0,
             tmp_string = '',
@@ -273,7 +248,7 @@ evente.Expression = class {
         while ( match ) {
             if ( match.index !== pos ) {
                 tmp = string.substr(pos, match.index - pos);
-                tmp_string += 'strings.' + evente.getStringIndex(tmp) + ' + ';
+                tmp_string += 'strings.' + EventeStrings.getIndex(tmp) + ' + ';
                 pos = match.index;
             }
             tmp = match[0].substr(2, match[0].length - 4).trim();
@@ -285,7 +260,7 @@ evente.Expression = class {
         }
         tmp = string.substr(pos);
         if ( tmp.length )
-            tmp_string += 'strings.' + evente.getStringIndex(tmp);
+            tmp_string += 'strings.' + EventeStrings.getIndex(tmp);
         if ( tmp_string.endsWith(' + ') )
             tmp_string = tmp_string.substr(0, tmp_string.length - 3);
         if ( tmp_string.startsWith('(') && tmp_string.endsWith(')') && !tmp_string.match(/^\(.*(\(|\)).*\)$/) )
@@ -293,6 +268,12 @@ evente.Expression = class {
         return tmp_string;
     }
 
+    /**
+     * Parse strings of expression into model fields
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_strings(string) {
         let result = '',
             pos = 0,
@@ -307,7 +288,7 @@ evente.Expression = class {
             } else {
                 if ( str.delim === match[0] ) {
                     str.string = string.substr(str.start, match.index - str.start);
-                    str.index = evente.getStringIndex(str.string);
+                    str.index = EventeStrings.getIndex(str.string);
                     result += 'strings.' + str.index;
                     str.start = 0;
                 }
@@ -320,6 +301,12 @@ evente.Expression = class {
         return result;
     }
 
+    /**
+     * Parse double symbol operators
+     * @private
+     * @param {string} string Expression string
+     * @returns {string}
+     */
     parse_operations(string) {
         string = string.replace(/&&/g, '&');
         string = string.replace(/\|\|/g, '?');
@@ -328,6 +315,12 @@ evente.Expression = class {
         return string;
     }
 
+    /**
+     * Parse expression into tokens
+     * @private
+     * @param {string} string Expression string
+     * @returns {Array<string>}
+     */
     parse_tokens(string) {
         let pos = 0,
             tmp,
@@ -354,6 +347,13 @@ evente.Expression = class {
         return tokens;
     }
 
+    /**
+     * Parse expression tokens into Abstract Syntax Tree
+     * @private
+     * @param {Array<string>} tokens Expression tokens
+     * @param {*} [item] Abstract Syntax Tree item
+     * @returns {Object}
+     */
     parse_tree(tokens, item) {
         if ( item === undefined )
             item = {};
@@ -378,7 +378,7 @@ evente.Expression = class {
                     }
                     if ( item.type === token )
                         break;
-                    if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations[token].priority )
+                    if ( EventeExpression.operations[item.type].priority >= EventeExpression.operations[token].priority )
                         item = { type: token, params: [ item ] };
                     else
                         item.params.push(this.parse_tree(
@@ -431,7 +431,7 @@ evente.Expression = class {
                             item.type = '.';
                             item.params.push(token);
                         } else {
-                            if ( evente.Expression.operations[item.type].priority >= evente.Expression.operations['.'].priority )
+                            if ( EventeExpression.operations[item.type].priority >= EventeExpression.operations['.'].priority )
                                 item = {type: '.', params: [item, token]};
                             else
                                 item.params.push({type: '.', params: [item.params.pop(), token]});
@@ -451,7 +451,7 @@ evente.Expression = class {
 
 };
 
-evente.Expression.operations = {
+EventeExpression.operations = {
     '+': { priority: 0, func: function(a, b) { return a + b; } },
     '-': { priority: 0, func: function(a, b) { return a - b; } },
     '*': { priority: 1, func: function(a, b) { return a * b; } },
@@ -466,8 +466,18 @@ evente.Expression.operations = {
     '|': { priority: 7 },
 };
 
-evente.Attribute = class extends evente.Expression {
 
+/**
+ * Attribute class
+ * @extends EventeExpression
+ */
+class EventeAttribute extends EventeExpression {
+
+    /**
+     * @param {HTMLElement} node DOM element
+     * @param {string} name Attribute name
+     * @param {EventeModel} model EventeModel object
+     */
     constructor(node, name, model) {
         let attribute = node.attributes[name];
         super(attribute.value);
@@ -476,6 +486,9 @@ evente.Attribute = class extends evente.Expression {
         this.model = model;
     }
 
+    /**
+     * Apply attributes values
+     */
     apply() {
         let value = this.eval(this.model);
         value = value !== undefined ? value.toString() : '';
@@ -483,40 +496,113 @@ evente.Attribute = class extends evente.Expression {
             this.node.setAttribute(this.name, value);
     }
 
+    /**
+     * Check attribute expression is in double braces
+     * @param {Element} node DOM element
+     * @param {string} name Attribute name
+     * @returns {string}
+     */
+    static check(node, name) {
+        let value = node.getAttribute(name).trim();
+        return !value.startsWith('{{') ? '{{' + value + '}}' : value;
+    };
+
+    /**
+     * Get registered attributes ordered by priority
+     * @returns {Array<Object>}
+     */
+    static getAttributes() {
+        if ( EventeAttribute.attributesByPriorty.length !== Object.keys(EventeAttribute.attributes).length ) {
+            let tmp = [];
+            for ( let i in EventeAttribute.attributes )
+                tmp.push({ name: i, priority: EventeAttribute.attributes[i].priority});
+            tmp.sort((a,b) => {
+                if ( a.priority > b.priority )
+                    return -1;
+                if ( a.priority < b.priority )
+                    return 1;
+                return 0;
+            })
+            EventeAttribute.attributesByPriorty = tmp;
+        }
+        return EventeAttribute.attributesByPriorty;
+    }
+
 };
 
-evente.Attribute.priority = 0;
-evente.Attribute.check = function(node, name) {
-    let value = node.getAttribute(name).trim();
-    return !value.startsWith('{{') ? '{{' + value + '}}' : value;
-};
+/**
+ * Registered attributes
+ * @type {Object}
+ */
+EventeAttribute.attributes = {};
+/**
+ * Regstered attributes ordered by priority
+ * @private
+ * @type {Array<Object>}
+ */
+EventeAttribute.attributesByPriorty = [];
+/**
+ * Default attribute priority
+ * @type {number}
+ * @default 0
+ */
+EventeAttribute.priority = 0;
 
-evente.App = class {
 
+/**
+ * Evente Application class
+ */
+class EventeApplication {
+
+    /**
+     * @param {string} selector Selector for application root element
+     * @param {*} data Initial data
+     * @param {Object} [options={}] Aplication creation options
+     * @param {boolean} [options.clean=false] Remove Comment and empty Text nodes from DOM
+     * @param {boolean} [options.router=true] Use router
+     * @param {boolean} [options.run=true] Run immediately after create
+     */
     constructor(selector, data, options) {
         options = {
             clean: false,
             router: true,
-            run: false,
+            run: true,
             ...options
         };
-        this.model = new evente.Model(selector, data, {init: false});
+        this.element = document.querySelector(selector);
+        this.model = new EventeModel(this.element, data);
+        this.model.proxy = new Proxy({$: ''}, new EventeModelProxyHandler(this.model));
         if ( options.clean )
             this.clean();
         if ( options.router )
-            this.router = new evente.Router(this.model.element);
+            this.router = new EventeRouter(this.element);
         if ( options.run )
             this.run();
     }
 
+    /**
+     * Get model data
+     * @returns {Object}
+     */
     get data() {
         return this.model.data;
     }
 
+    /**
+     * Set model data
+     * @param {Object} value
+     */
     set data(value) {
         this.model.data = value;
+        EventeParser.parseNode(this.element, this.model);
     }
 
+    /**
+     * Add or remove route
+     * @param {string} route Route pattern
+     * @param {Function} [callback] Calback function to set or undefined to remove route
+     * @param {*} [params] Parameters that will be passed to callback function
+     */
     route(route, callback, params) {
         if ( !this.router )
             return;
@@ -526,12 +612,19 @@ evente.App = class {
             this.router.remove(route);
     }
 
+    /**
+     * Run application
+     */
     run() {
-        this.model.init();
+        EventeParser.parseNode(this.element, this.model);
         if ( this.router )
             this.router.trigger();
     }
 
+    /**
+     * Remove Comment and empty Text nodes from DOM
+     * @private
+     */
     clean() {
         let node, nodes = [], walker = document.createTreeWalker(document, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT, null, false);
         while( node = walker.nextNode() ) {
@@ -551,8 +644,16 @@ evente.App = class {
 
 };
 
-evente.AttributeBase = class extends evente.Attribute {
 
+/**
+ * Base attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeBase extends EventeAttribute {
+
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         let attribute = node.attributes[name],
             match = attribute.value.match(/^{{(.*?)(\s+as\s+([a-z0-9_]+))}}$/im);
@@ -562,6 +663,9 @@ evente.AttributeBase = class extends evente.Attribute {
         this.apply();
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let i, item,
             items = this.node.childNodes,
@@ -572,6 +676,13 @@ evente.AttributeBase = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Change alias in expressions on base path
+     * @private
+     * @param {Element | Text} node DOM node
+     * @param {string} alias Alias name
+     * @param {string} base Base path
+     */
     dealias(node, alias, base) {
         let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
@@ -586,7 +697,7 @@ evente.AttributeBase = class extends evente.Attribute {
             }
             if ( node.nodeValue !== value ) {
                 node.nodeValue = value;
-                this.model.parseAttributes(node);
+                EventeParser.parseAttributes(node, this.model);
                 this.model.applyAttributes(node);
             }
             return;
@@ -595,7 +706,7 @@ evente.AttributeBase = class extends evente.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = evente.attributes[item.name] ? evente.attributes[item.name].check(node, item.name) : item.value;
+            value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
             if ( node.e_base[item.name] ) {
                 value = node.e_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
@@ -606,7 +717,7 @@ evente.AttributeBase = class extends evente.Attribute {
             }
             if ( item.value !== value ) {
                 item.value = value;
-                this.model.parseAttribute(node, item.name);
+                EventeParser.parseAttribute(node, item.name, this.model);
                 this.model.applyAttribute(node, item.name);
             }
         }
@@ -627,10 +738,18 @@ evente.AttributeBase = class extends evente.Attribute {
 
 };
 
-evente.attributes['e-base'] = evente.AttributeBase;
+EventeAttribute.attributes['e-base'] = EventeAttributeBase;
 
-evente.AttributeFor = class extends evente.Attribute {
 
+/**
+ * b-for attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeFor extends EventeAttribute {
+
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         let attribute = node.attributes[name],
             match = attribute.value.match(/^{{([a-z0-9_]+)\s+in\s+(.*?)(\s+key\s+([a-z0-9_]+))?}}$/im);
@@ -642,6 +761,9 @@ evente.AttributeFor = class extends evente.Attribute {
         node.innerHTML = '';
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let i, key, child,
             remove = [],
@@ -662,7 +784,7 @@ evente.AttributeFor = class extends evente.Attribute {
                 this.dealias(child, '\\$key', key);
                 this.dealias(child, this.alias, property + '.' + i);
                 this.node.appendChild(child);
-                this.model.parseNode(child);
+                EventeParser.parseNode(child, this.model);
             }
         }
         for ( i = 0; i < this.node.childNodes.length; i++ ) {
@@ -676,6 +798,13 @@ evente.AttributeFor = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Change alias in expressions on base path
+     * @private
+     * @param {Element|Text} node DOM node
+     * @param {string} alias Alias name
+     * @param {string} base Base path
+     */
     dealias(node, alias, base) {
         let replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
             test = new RegExp('{{');
@@ -687,7 +816,7 @@ evente.AttributeFor = class extends evente.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            if ( !evente.attributes[item.name] && !item.value.match(test) )
+            if ( !EventeAttribute.attributes[item.name] && !item.value.match(test) )
                 continue;
             if ( item.value.match(replace) )
                 item.value = item.value.replace(replace, '$1' + base + '$2');
@@ -707,16 +836,27 @@ evente.AttributeFor = class extends evente.Attribute {
 
 };
 
-evente.AttributeFor.priority = 99;
-evente.attributes['e-for'] = evente.AttributeFor;
+EventeAttributeFor.priority = 99;
+EventeAttribute.attributes['e-for'] = EventeAttributeFor;
 
-evente.AttributeHideShow = class extends evente.Attribute {
 
+/**
+ * b-show and b-hide attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeHideShow extends EventeAttribute {
+
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         super(node, name, model);
         this.type = name;
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         if (
             ( this.type == 'e-hide' && !this.eval(this.model) ) ||
@@ -729,15 +869,26 @@ evente.AttributeHideShow = class extends evente.Attribute {
 
 };
 
-evente.attributes['e-hide'] = evente.AttributeHideShow;
-evente.attributes['e-show'] = evente.AttributeHideShow;
+EventeAttribute.attributes['e-hide'] = EventeAttributeHideShow;
+EventeAttribute.attributes['e-show'] = EventeAttributeHideShow;
 
-evente.AttributeModel = class extends evente.Attribute {
 
+/**
+ * b-model attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeModel extends EventeAttribute {
+
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         super(node, name, model);
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let value = this.eval(this.model);
         if ( value !== undefined )
@@ -758,57 +909,100 @@ evente.AttributeModel = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Get assotiated model field value
+     * @returns {*}
+     */
     get() {
         let value = this.eval(this.model);
         return value !== undefined ? value : '';
     }
 
+    /**
+     * Set assotiated model field value
+     * @param {*} value
+     */
     set(value) {
         this.model.set(this.property(this.model), value);
     }
 
 };
 
-evente.attributes['e-model'] = evente.AttributeModel;
+EventeAttribute.attributes['e-model'] = EventeAttributeModel;
 
-evente.Model = class {
 
-    constructor(selector, data, options) {
-        options = { init: true, ...options };
-        evente.models.push(this);
-        this.proxyHandler = new evente.ModelProxyHandler(this);
-        this.shadow = { ...data, strings: evente.strings };
-        this.proxy = new Proxy({$: ''}, this.proxyHandler);
+
+/**
+ * Evente Model class
+ */
+class EventeModel {
+    /**
+     * @param {Node} node DOM Node
+     * @param {Object} data Initial model data
+     */
+    constructor(node, data) {
+        /**
+         * @private
+         * @type {Object}
+         */
+        this.shadow = { ...data, strings: EventeStrings.strings };
+        /**
+         * @private
+         * @type {Object.<string, Object.<string, Set<Function>>>}
+         */
         this.listeners = { get: {}, set: {}, delete: {} };
+        /**
+         * @private
+         * @type {Object.<string, Set<Node>>}
+         * */
         this.links = {};
-        this.element = document.querySelector(selector);
-        if ( options.init )
-            this.init();
+        /**
+         * @type {Proxy}
+         */
+        this.proxy = null;
+        node.addEventListener('input', EventeModel.eventHander, true);
     }
 
+    /**
+     * Get model data
+     * @returns {Object}
+     */
     get data() {
         return this.proxy;
     }
 
+    /**
+     * Set model data
+     * @param {Object} value
+     */
     set data(value) {
-        value.strings = evente.strings;
+        value.strings = EventeStrings.strings;
         this.shadow = value;
-        this.parseNode(this.element);
     }
 
+    /**
+     * Get model field by path
+     * @param {string} property Model path
+     */
     get(property) {
-        return this.data.getField(property);
+        return this.proxy.getField(property);
     }
 
+    /**
+     * Set model field by path
+     * @param {string} property Model path
+     * @param {*} value New value
+     */
     set(property, value) {
-        this.data.setField(property, value);
+        this.proxy.setField(property, value);
     }
 
-    init() {
-        this.element.addEventListener('input', evente.Model.eventHander, true);
-        this.parseNode(this.element);
-    }
-
+    /**
+     * Add listener of model change events
+     * @param {string} event Listening evente - get, set or delete
+     * @param {string} property Path in model data
+     * @param {Function} listener Listener function
+     */
     addListener(event, property, listener) {
         if ( !this.listeners[event] )
             return;
@@ -817,6 +1011,12 @@ evente.Model = class {
         this.listeners[event][property].add(listener);
     }
 
+    /**
+     * Add listener of model change events
+     * @param {string} event Listening evente - get, set or delete
+     * @param {string} property Path in model data
+     * @param {Function} listener Listener function
+     */
     removeListener(event, property, listener) {
         if ( this.listeners[event] && this.listeners[event][property] ) {
             this.listeners[event][property].delete(listener);
@@ -825,10 +1025,38 @@ evente.Model = class {
         }
     }
 
+    /**
+     * Get DOM nodes which dependent of link
+     * @param {string} path Path in model data hierarchy
+     * @returns {Set<Node>}
+     */
+    getNodes(path) {
+        let i, node, nodes = new Set();
+        for ( i in this.links ) {
+            if ( !i.startsWith(path + '.') )
+                continue;
+            for ( node of this.links[i] )
+                nodes.add(node);
+        }
+        while ( path != '' ) {
+            if ( this.links[path] !== undefined ) {
+                for ( node of this.links[path] )
+                    nodes.add(node);
+            }
+            path = path.split('.').slice(0, -1).join('.');
+        }
+        return nodes;
+    }
+
+    /**
+     * Apply node attributes values
+     * @param {Node} node DOM node
+     */
     applyAttributes(node) {
         if ( node.e_attributes === undefined )
             return;
         if ( node instanceof Text ) {
+            // TODO
             let value = node.e_attributes[''].eval(this);
             value = value !== undefined ? value.toString() : '';
             if ( node.nodeValue !== value )
@@ -840,101 +1068,21 @@ evente.Model = class {
             this.applyAttribute(node, name);
     }
 
+    /**
+     * Apply node attribute value
+     * @param {Node} node DOM node
+     * @param {string} name Atribute name
+     */
     applyAttribute(node, name) {
         if ( node.e_attributes === undefined || node.e_attributes[name] === undefined )
             return;
         node.e_attributes[name].apply();
     }
 
-    getNodes(link) {
-        let i, node, nodes = new Set();
-        for ( i in this.links ) {
-            if ( !i.startsWith(link + '.') )
-                continue;
-            for ( node of this.links[i] )
-                nodes.add(node);
-        }
-        while ( link != '' ) {
-            if ( this.links[link] !== undefined ) {
-                for ( node of this.links[link] )
-                    nodes.add(node);
-            }
-            link = link.split('.').slice(0, -1).join('.');
-        }
-        return nodes;
-    }
-
-    parseNode(node) {
-        this.parseAttributes(node);
-        if ( node instanceof Text ) {
-            this.applyAttributes(node);
-            return;
-        }
-        let i, item, items = node.childNodes;
-        for ( i = 0; i < items.length; i++ ) {
-            item = items[i];
-            if (
-                item instanceof Comment ||
-                item instanceof HTMLBRElement ||
-                item instanceof HTMLScriptElement
-            )
-                continue;
-            this.parseNode(item);
-        }
-        this.applyAttributes(node);
-    }
-
-    parseAttributes(node) {
-        if ( node instanceof Text ) {
-            if ( node.nodeValue.indexOf('{{') !== -1 ) {
-                node.e_attributes = { '': new evente.Expression(node.nodeValue) };
-                this.updateLinks(node);
-            } else {
-                if ( node.e_attributes === undefined )
-                    delete node.e_attributes;
-            }
-            return;
-        }
-        let i, attribute, attributes = evente.getAttributes();
-        for ( i in attributes )
-            this.parseAttribute(node, attributes[i].name);
-        for ( i = 0; i < node.attributes.length; i++ ) {
-            attribute = node.attributes[i];
-            if ( evente.attributes[attribute.name] === undefined )
-                this.parseAttribute(node, attribute.name);
-        }
-        if ( node.e_attributes )
-            this.updateLinks(node);
-    }
-
-    parseAttribute(node, name) {
-        let value, tmp = node.attributes[name];
-        if ( !tmp ) {
-            if ( node.e_attributes )
-                delete node.e_attributes[name];
-            return;
-        }
-        if ( node.e_attributes && node.e_attributes[name] ) {
-            let expression = '{{' + node.e_attributes[name].expression  + '}}';
-            if ( expression === tmp.value )
-                return;
-        }
-        if ( evente.attributes[name] ) {
-            value = evente.attributes[name].check(node, name);
-            if ( tmp.value !== value )
-                tmp.value = value;
-            tmp = new evente.attributes[name](node, name, this);
-        } else {
-            if (tmp.value.indexOf('{{') === -1)
-                return;
-            if ( evente.attributes[name] === undefined )
-                tmp = new evente.Attribute(node, name, this);
-        }
-        if ( node.e_attributes === undefined )
-            node.e_attributes = {};
-        node.e_attributes[name] = tmp;
-    }
-
+    /**
+     * Update dependencies of DOMnode
+     * @param {Node} node DOM node
+     */
     updateLinks(node) {
         var i, j, tmp,
             set = new Set();
@@ -954,6 +1102,11 @@ evente.Model = class {
         }
     }
 
+    /**
+     * Add dependency of DOM node
+     * @param {Node} node DOM node
+     * @param {string} property Path in model data
+     */
     link(node, property) {
         if ( this.links[property] === undefined )
             this.links[property] = new Set();
@@ -963,6 +1116,11 @@ evente.Model = class {
         node.e_links.add(property);
     }
 
+    /**
+     * Remove dependency of DOM node
+     * @param {Node} node DOM node
+     * @param {string} [property] Path in model data
+     */
     unlink(node, property) {
         if ( property === undefined ) {
             if ( node.e_links !== undefined ) {
@@ -986,51 +1144,63 @@ evente.Model = class {
         }
     }
 
+    /**
+     * Handle model data changes via DOM elements
+     * @param {Event} event Event object
+     */
+    static eventHander(event) {
+        if (
+            !(event.target instanceof HTMLInputElement) &&
+            !(event.target instanceof HTMLButtonElement ) &&
+            !(event.target instanceof HTMLTextAreaElement) &&
+            !(event.target instanceof HTMLSelectElement)
+        )
+            return;
+        if ( event.target.e_attributes === undefined || event.target.e_attributes['e-model'] === undefined )
+            return;
+        let model = event.target.e_attributes['e-model'],
+            value_old = model.get(),
+            value_new = event.target.value;
+        if ( value_old === value_new )
+            return;
+        model.set(value_new);
+    }
+
 }
 
-evente.Model.eventHander = function(event) {
-    if (
-        !(event.target instanceof HTMLInputElement) &&
-        !(event.target instanceof HTMLButtonElement ) &&
-        !(event.target instanceof HTMLTextAreaElement) &&
-        !(event.target instanceof HTMLSelectElement)
-    )
-        return;
-    if ( event.target.e_attributes === undefined || event.target.e_attributes['e-model'] === undefined )
-        return;
-    let model = event.target.e_attributes['e-model'],
-        value_old = model.get(),
-        value_new = event.target.value;
-    if ( value_old === value_new )
-        return;
-    model.set(value_new);
-}
 
-evente.ModelProxyHandler = class {
 
-    constructor(model) {
-        this.model = model;
+/**
+ * Evente Model Proxy Handler class
+ */
+class EventeModelProxyHandler {
+
+    /**
+     * @param {EventeModel} data 
+     */
+    constructor(data) {
+        this.data = data;
     }
 
     deleteProperty(target, prop) {
-        let data = this.model.shadow.getField(target.$);
-        let listeners = this.model.listeners.delete[target.$];
+        let data = this.data.shadow.getField(target.$);
+        let listeners = this.data.listeners.delete[target.$];
         if ( listeners ) {
             for ( let listener of listeners )
                 listener(data, target.$, prop);
         }
         delete data[prop];
         let property = ( target.$ ? target.$ + '.' : '' ) + prop,
-            node, nodes = this.model.getNodes(property);
+            node, nodes = this.data.getNodes(property);
         for ( node of nodes )
-            this.model.applyAttributes(node, property);
+            this.data.applyAttributes(node);
         return true;
     }
 
     get(target, prop) {
         if ( prop === 'constructor' )
             return { name: 'Proxy' };
-        let data = this.model.shadow.getField(target.$);
+        let data = this.data.shadow.getField(target.$);
         switch ( prop ) {
             case 'keys':
                 return Object.keys(data);
@@ -1041,7 +1211,7 @@ evente.ModelProxyHandler = class {
             case 'clone':
                 return function() { return {...data}; };
         }
-        let listeners = this.model.listeners.get[target.$];
+        let listeners = this.data.listeners.get[target.$];
         if ( listeners ) {
             for ( let listener of listeners )
                 listener(data, target.$, prop);
@@ -1052,7 +1222,7 @@ evente.ModelProxyHandler = class {
             case 'object':
                 return new Proxy(
                     { $: ( target.$ ? target.$ + '.' : '' ) + prop },
-                    this.model.proxyHandler
+                    this
                 );
             default:
                 return data[prop];
@@ -1060,29 +1230,29 @@ evente.ModelProxyHandler = class {
     }
 
     getPrototypeOf(target) {
-        let data = this.model.shadow.getField(target.$);
+        let data = this.data.shadow.getField(target.$);
         // Not Reflect.getPrototypeOf(data), for .. in not working
         return data;
     }
 
     has(target, prop) {
-        let data = this.model.shadow.getField(target.$);
+        let data = this.data.shadow.getField(target.$);
         return Reflect.has(data, prop);
     }
 
     isExtensible(target) {
-        let data = this.model.shadow.getField(target.$);
+        let data = this.data.shadow.getField(target.$);
         return Reflect.isExtensible(data);
     }
 
     ownKeys(target) {
-        let data = this.model.shadow.getField(target.$);
+        let data = this.data.shadow.getField(target.$);
         return Object.keys(data);
     }
 
     set(target, prop, value) {
-        let data = this.model.shadow.getField(target.$),
-            listeners = this.model.listeners.set[target.$];
+        let data = this.data.shadow.getField(target.$),
+            listeners = this.data.listeners.set[target.$];
         if ( value.constructor.name === 'Proxy' )
             value = value.clone();
         if ( listeners ) {
@@ -1092,38 +1262,210 @@ evente.ModelProxyHandler = class {
         if ( data[prop] !== value ) {
             data[prop] = value;
             let property = ( target.$ ? target.$ + '.' : '' ) + prop,
-                node, nodes = this.model.getNodes(property);
+                node, nodes = this.data.getNodes(property);
             for ( node of nodes )
-                this.model.applyAttributes(node, property);
+                this.data.applyAttributes(node);
         }
         return true;
     }
 
 }
 
-evente.Resource = class {
 
+
+
+
+/**
+ * Evente HTML template parser
+ */
+class EventeParser {
+
+    /**
+     * Parse DOM node
+     * @param {Node} node DOM node
+     * @param {EventeModel} model EventeModel object
+     */
+    static parseNode(node, model) {
+        EventeParser.parseAttributes(node, model);
+        if ( node instanceof Text ) {
+            model.applyAttributes(node);
+            return;
+        }
+        let i, item, items = node.childNodes;
+        for ( i = 0; i < items.length; i++ ) {
+            item = items[i];
+            if (
+                item instanceof Comment ||
+                item instanceof HTMLBRElement ||
+                item instanceof HTMLScriptElement
+            )
+                continue;
+            EventeParser.parseNode(item, model);
+        }
+        model.applyAttributes(node);
+    }
+
+    /**
+     * Parse attributes of DOM node
+     * @param {Node} node DOM node
+     * @param {EventeModel} model EventeModel object
+     */
+    static parseAttributes(node, model) {
+        if ( node instanceof Text ) {
+            if ( node.nodeValue.indexOf('{{') !== -1 ) {
+                node.e_attributes = { '': new EventeExpression(node.nodeValue) };
+                model.updateLinks(node);
+            } else {
+                if ( node.e_attributes === undefined )
+                    delete node.e_attributes;
+            }
+            return;
+        }
+        let i, attribute, attributes = EventeAttribute.getAttributes();
+        for ( i in attributes )
+            EventeParser.parseAttribute(node, attributes[i].name, model);
+        for ( i = 0; i < node.attributes.length; i++ ) {
+            attribute = node.attributes[i];
+            if ( EventeAttribute.attributes[attribute.name] === undefined )
+                EventeParser.parseAttribute(node, attribute.name, model);
+        }
+        if ( node.e_attributes )
+            model.updateLinks(node);
+    }
+
+    /**
+     * Parse attribute DOM node
+     * @param {Node} node DOM node
+     * @param {string} name Attribute name
+     * @param {EventeModel} model EventeModel object
+     */
+    static parseAttribute(node, name, model) {
+        let value, tmp = node.attributes[name];
+        if ( !tmp ) {
+            if ( node.e_attributes )
+                delete node.e_attributes[name];
+            return;
+        }
+        if ( node.e_attributes && node.e_attributes[name] ) {
+            let expression = '{{' + node.e_attributes[name].expression  + '}}';
+            if ( expression === tmp.value )
+                return;
+        }
+        if ( EventeAttribute.attributes[name] ) {
+            value = EventeAttribute.attributes[name].check(node, name);
+            if ( tmp.value !== value )
+                tmp.value = value;
+            tmp = new EventeAttribute.attributes[name](node, name, model);
+        } else {
+            if (tmp.value.indexOf('{{') === -1)
+                return;
+            tmp = new EventeAttribute(node, name, model);
+        }
+        if ( node.e_attributes === undefined )
+            node.e_attributes = {};
+        node.e_attributes[name] = tmp;
+    }
+}
+
+
+const EventePipes = {
+
+    empty: function(params) {
+        return params[0] === undefined || params[0] === null ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
+    },
+
+    if: function(params) {
+        var tmp = parseFloat(params[0]);
+        if ( !isNaN(tmp) )
+            params[0] = tmp;
+        return params[0] ? ( params[1] ? params[1] : '' ) : ( params[2] ? params[2] : '' );
+    },
+
+    max: function(params) {
+        let tmp = EventePipes.reverse(params);
+        return tmp ? tmp[0] : '';
+    },
+
+    min: function(params) {
+        let tmp = EventePipes.sort(params);
+        return tmp ? tmp[0] : '';
+    },
+
+    reverse: function(params) {
+        let tmp = EventePipes.sort(params);
+        return tmp ? tmp.reverse() : '';
+    },
+
+    sort: function(params) {
+        if ( params[0] === undefined || params[0] === null )
+            return '';
+        let values = params[0] instanceof Array ? params[0].slice() : params[0].keys;
+        if ( values === undefined )
+            return '';
+        return values.sort();
+    },
+
+}
+
+
+/**
+ * Evente Resource class
+ */
+class EventeResource {
+
+    /**
+     * @param {string} url Resource URL
+     * @param {string} [type=json] Resource content type 
+     */
     constructor(url, type) {
         this.url = url;
         this.type = type || 'json';
     }
 
+    /**
+     * Send GET request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     get(params) {
         return this.method('get', params);
     }
 
+    /**
+     * Send POST request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     post(params) {
         return this.method('post', params);
     }
 
+    /**
+     * Send PUT request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     put(params) {
         return this.method('put', params);
     }
 
+    /**
+     * Send DELETE request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     delete(params) {
         return this.method('delete', params);
     }
 
+    /**
+     * Execute request method
+     * @private
+     * @param {string} method Method type
+     * @param {Object} [params={}] Request parameters
+     * @param {Object} [headers=EventeResource.headers] Request headers
+     * @returns {Promise}
+     */
     method(method, params, headers) {
         params = params || {};
         if ( params.constructor.name === 'Proxy' )
@@ -1133,7 +1475,7 @@ evente.Resource = class {
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || evente.Resource.headers) };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || EventeResource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -1170,17 +1512,35 @@ evente.Resource = class {
 
 }
 
-evente.Resource.headers = {};
+/**
+ * Default headers
+ * @type {Object}
+ * @default {}
+ */
+EventeResource.headers = {};
 
-evente.Router = class {
+/**
+ * Evente Router class
+ */
+class EventeRouter {
 
-    constructor(element) {
-        evente.routers.push(this);
+    /**
+     * 
+     * @param {Node} node 
+     */
+    constructor(node) {
+        EventeRouter.routers.push(this);
         this.routes = {};
-        this.element = element;
-        this.element.addEventListener('click', evente.Router.eventHander, true);
+        this.node = node;
+        this.node.addEventListener('click', EventeRouter.clickHander, true);
     }
 
+    /**
+     * Add route
+     * @param {string} route Route pattern
+     * @param {Function} callback Callback function
+     * @param {*} params Parameters passed to callback function
+     */
     add(route, callback, params) {
         route = this.normalize(route);
         this.routes[route] = {
@@ -1190,17 +1550,32 @@ evente.Router = class {
         };
     }
 
+    /**
+     * Remove route
+     * @param {string} route Route pattern
+     */
     remove(route) {
         route = this.normalize(route);
         delete this.routes[route];
     }
 
+    /**
+     * Trigger route handling
+     * @param {string} route Route
+     * @param {boolean} push Flag to push route in history
+     */
     trigger(route, push) {
         if ( route === undefined )
             route = location.pathname;
         this.handle(route, push);
     }
 
+    /**
+     * Handle route change
+     * @param {string} route Route
+     * @param {boolean} push Flag to push route in history
+     * @returns {boolean}
+     */
     handle(route, push) {
         route = this.normalize(route);
         if ( this.routes[route] !== undefined ) {
@@ -1238,6 +1613,11 @@ evente.Router = class {
         return Object.keys(routes).length > 0;
     }
 
+    /**
+     * Normalize route form
+     * @param {string} route Route
+     * @returns {string}
+     */
     normalize(route) {
         if ( route.startsWith(location.origin) )
             route = route.substr(location.origin.length);
@@ -1250,24 +1630,56 @@ evente.Router = class {
         return route;
     }
 
-}
-
-evente.Router.eventHander = function(event) {
-    let target = event.target;
-    while ( !(target instanceof HTMLAnchorElement) ) {
-        target = target.parentNode;
-        if ( target instanceof HTMLDocument )
-            return;
+    /**
+     * Get router by DOM node
+     * @param {Node} node DOM node
+     * @returns {EventeRouter}
+     */
+    static getRouter(node) {
+        for ( let i in EventeRouter.routers ) {
+            let router = EventeRouter.routers[i];
+            if ( router.node === node || router.node.contains(node) )
+                return router;
+        }
     }
-    let router = evente.getRouter(target);
-    if ( !router )
-        return;
-    let route = target.getAttribute('href');
-    if ( route && router.handle(route, true) )
-        event.preventDefault();
+
+    /**
+     * Handle clck event
+     * @param {Event} event Event object
+     */
+    static clickHander(event) {
+        let target = event.target;
+        while ( !(target instanceof HTMLAnchorElement) ) {
+            target = target.parentNode;
+            if ( target instanceof HTMLDocument )
+                return;
+        }
+        let router = EventeRouter.getRouter(target);
+        if ( !router )
+            return;
+        let route = target.getAttribute('href');
+        if ( route && router.handle(route, true) )
+            event.preventDefault();
+    }
+
+    /**
+     * Handle URL change
+     */
+    static popstateHandler() {
+        for ( let i in EventeRouter.routers )
+        EventeRouter.routers[i].handle(location.href);
+    }
+
 }
 
-evente.Selector = class extends Array {
+EventeRouter.routers = [];
+window.addEventListener('popstate', EventeRouter.popstateHandler);
+
+/**
+ * Class for operations with DOM JQuery-like way
+ * @extends Array
+ */
+class EventeSelector extends Array {
 
     constructor(options, selector) {
         super();
@@ -1470,7 +1882,7 @@ evente.Selector = class extends Array {
             case 'closest':
             case 'find':
             case 'parent':
-                return new evente.Selector(result, this);
+                return new EventeSelector(result, this);
             case 'hasClass':
             case 'is':
                 return options.all === true ? true : false;
@@ -1480,3 +1892,31 @@ evente.Selector = class extends Array {
     }
 
 };
+
+if ( typeof $ === 'undefined' )
+    var $ = function(selector) { return new EventeSelector(selector); }
+
+/**
+ * Evente Strings class
+ */
+class EventeStrings {
+
+    /**
+     * Get index of string
+     * @param {string} string String to get index
+     * @returns {number}
+     */
+    static getIndex(string) {
+        var index = EventeStrings.strings.indexOf(string);
+        if ( index === -1 ) {
+            EventeStrings.strings.push(string);
+            index = EventeStrings.strings.indexOf(string);
+        }
+        return index;
+    }
+
+}
+
+EventeStrings.strings = [];
+
+

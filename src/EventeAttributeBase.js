@@ -1,7 +1,16 @@
-var evente = require('./evente.js');
+const EventeAttribute = require('./EventeAttribute');
+const EventeModel = require('./EventeModel');
+const EventeParser = require('./EventeParser');
 
-evente.AttributeBase = class extends evente.Attribute {
+/**
+ * Base attribute class
+ * @extends EventeAttribute
+ */
+class EventeAttributeBase extends EventeAttribute {
 
+    /**
+     * @inheritdoc
+     */
     constructor(node, name, model) {
         let attribute = node.attributes[name],
             match = attribute.value.match(/^{{(.*?)(\s+as\s+([a-z0-9_]+))}}$/im);
@@ -11,6 +20,9 @@ evente.AttributeBase = class extends evente.Attribute {
         this.apply();
     }
 
+    /**
+     * @inheritdoc
+     */
     apply() {
         let i, item,
             items = this.node.childNodes,
@@ -21,6 +33,13 @@ evente.AttributeBase = class extends evente.Attribute {
         }
     }
 
+    /**
+     * Change alias in expressions on base path
+     * @private
+     * @param {Element | Text} node DOM node
+     * @param {string} alias Alias name
+     * @param {string} base Base path
+     */
     dealias(node, alias, base) {
         let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
         if ( node instanceof Text ) {
@@ -35,7 +54,7 @@ evente.AttributeBase = class extends evente.Attribute {
             }
             if ( node.nodeValue !== value ) {
                 node.nodeValue = value;
-                this.model.parseAttributes(node);
+                EventeParser.parseAttributes(node, this.model);
                 this.model.applyAttributes(node);
             }
             return;
@@ -44,7 +63,7 @@ evente.AttributeBase = class extends evente.Attribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = evente.attributes[item.name] ? evente.attributes[item.name].check(node, item.name) : item.value;
+            value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
             if ( node.e_base[item.name] ) {
                 value = node.e_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
@@ -55,7 +74,7 @@ evente.AttributeBase = class extends evente.Attribute {
             }
             if ( item.value !== value ) {
                 item.value = value;
-                this.model.parseAttribute(node, item.name);
+                EventeParser.parseAttribute(node, item.name, this.model);
                 this.model.applyAttribute(node, item.name);
             }
         }
@@ -76,4 +95,6 @@ evente.AttributeBase = class extends evente.Attribute {
 
 };
 
-evente.attributes['e-base'] = evente.AttributeBase;
+EventeAttribute.attributes['e-base'] = EventeAttributeBase;
+
+module.exports = EventeAttributeBase;

@@ -1,28 +1,61 @@
-var evente = require('./evente.js');
+/**
+ * Evente Resource class
+ */
+class EventeResource {
 
-evente.Resource = class {
-
+    /**
+     * @param {string} url Resource URL
+     * @param {string} [type=json] Resource content type 
+     */
     constructor(url, type) {
         this.url = url;
         this.type = type || 'json';
     }
 
+    /**
+     * Send GET request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     get(params) {
         return this.method('get', params);
     }
 
+    /**
+     * Send POST request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     post(params) {
         return this.method('post', params);
     }
 
+    /**
+     * Send PUT request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     put(params) {
         return this.method('put', params);
     }
 
+    /**
+     * Send DELETE request
+     * @param {Object} params Request parameters
+     * @returns {Promise}
+     */
     delete(params) {
         return this.method('delete', params);
     }
 
+    /**
+     * Execute request method
+     * @private
+     * @param {string} method Method type
+     * @param {Object} [params={}] Request parameters
+     * @param {Object} [headers=EventeResource.headers] Request headers
+     * @returns {Promise}
+     */
     method(method, params, headers) {
         params = params || {};
         if ( params.constructor.name === 'Proxy' )
@@ -32,7 +65,7 @@ evente.Resource = class {
                 delete params[param];
                 return '/' + tmp + end;
             }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || evente.Resource.headers) };
+            options = { mode: 'cors', method: method, headers: new Headers(headers || EventeResource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -69,4 +102,11 @@ evente.Resource = class {
 
 }
 
-evente.Resource.headers = {};
+/**
+ * Default headers
+ * @type {Object}
+ * @default {}
+ */
+EventeResource.headers = {};
+
+module.exports = EventeResource;

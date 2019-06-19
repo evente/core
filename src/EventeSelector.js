@@ -1,6 +1,8 @@
-var evente = require('./evente.js');
-
-evente.Selector = class extends Array {
+/**
+ * Class for operations with DOM JQuery-like way
+ * @extends Array
+ */
+class EventeSelector extends Array {
 
     constructor(options, selector) {
         super();
@@ -203,7 +205,7 @@ evente.Selector = class extends Array {
             case 'closest':
             case 'find':
             case 'parent':
-                return new evente.Selector(result, this);
+                return new EventeSelector(result, this);
             case 'hasClass':
             case 'is':
                 return options.all === true ? true : false;
@@ -213,3 +215,8 @@ evente.Selector = class extends Array {
     }
 
 };
+
+if ( typeof $ === 'undefined' )
+    var $ = function(selector) { return new EventeSelector(selector); }
+
+module.exports = EventeSelector;

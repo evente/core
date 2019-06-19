@@ -23,15 +23,12 @@ http.createServer((req, res) => {
     }
     if ( !fs.existsSync(source) )
         source = htmlDir + 'index.html';
-    fs.readFile(source, function(err, contents) {
-        if ( !err ) {
-            res.end(contents);
-        } else {
-            console.dir(err);
-            res.writeHead(500, {'Content-Type': 'text/plain'});
-            res.end('ERROR 500! Internal Server Error');
-        }
-    });
+    content = fs.readFileSync(source, 'utf-8');
+    if ( source.endsWith('.js') ) {
+        content = content.replace(/const [a-zA-Z]+ = require\('.+'\);\n?/gm, '');
+        content = content.replace(/module.exports = [a-zA-Z]+;\n?/gm, '');
+    }
+    res.end(content);
 }).listen(port, hostname, () => {
     console.log('Listening on http://%s:%d', hostname, port);
 });

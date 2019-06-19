@@ -1,3 +1,3 @@
-let minify = require('./minify.js');
+const minify = require('./minify.js');
 
 minify();

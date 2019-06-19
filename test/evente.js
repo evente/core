@@ -1,4 +1,4 @@
-var evente = require('../scripts/test.js');
+const evente = require('../src/Evente');
 
 document.body.innerHTML =
     '<div></div>';
