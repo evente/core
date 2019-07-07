@@ -48,6 +48,18 @@ describe('DOM selectors', () => {
         expect(selector.get(0)).toBe(expected);
     });
 
+    test('Get existing closest element by selector', () => {
+        let selector = new EventeSelector('input');
+        let expected = new EventeSelector([document.body], selector);
+        expect(selector.closest('body')).toEqual(expected);
+    });
+
+    test('Get not existing closest element by selector', () => {
+        let selector = new EventeSelector('input');
+        let expected = new EventeSelector([null], selector);
+        expect(selector.closest('a')).toEqual(expected);
+    });
+
     test('Get parents of selected elements', () => {
         let selector = new EventeSelector('div');
         let expected = new EventeSelector([document.body, document.body], selector);

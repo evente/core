@@ -1,4 +1,5 @@
 const evente = require('../src/Evente');
+const EventeApplication = require('../src/EventeApplication')
 
 const html =
     '<!-- Comment -->' +
@@ -10,7 +11,7 @@ describe('App class', () => {
 
     test('App object creation', () => {
         document.body.innerHTML = html;
-        let app = evente('body');
+        let app = new EventeApplication('body', {}, {run: false});
         expect(app.element).toBe(document.body);
     });
 

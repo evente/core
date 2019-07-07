@@ -61,11 +61,12 @@ class EventeResource {
         if ( params.constructor.name === 'Proxy' )
             params = params.clone();
         let url = this.url.replace(/\/:([-_0-9a-z]+)(\/|$)/ig, (match, param, end) => {
-                let tmp = params[param] || '';
-                delete params[param];
-                return '/' + tmp + end;
-            }),
-            options = { mode: 'cors', method: method, headers: new Headers(headers || EventeResource.headers) };
+            let tmp = params[param] || '';
+            delete params[param];
+            return '/' + tmp + end;
+        });
+        /** @type {RequestInit} */
+        let options = { mode: 'cors', method: method, headers: new Headers(headers || EventeResource.headers) };
         switch ( method ) {
             case 'get':
             case 'delete':
@@ -85,9 +86,9 @@ class EventeResource {
             this.ok = response.ok;
             this.status = response.status;
             switch ( this.type ) {
-                case 'json': return response.json();     break;
-                case 'form': return response.formData(); break;
-                default:     return response.text();
+                case 'json': return response.json();
+                case 'form': return response.formData();
+                case 'text': return response.text();
             }
         }).then(response => {
             if ( !this.ok ) {
