@@ -20,7 +20,7 @@ const inputFiles = [
     // Extensions
     'Object.js',
     // Order has matter
-    'evente.js',
+    'Evente.js',
     'EventeExpression.js',
     'EventeAttribute.js',
     // Order has no matter - ordered by name

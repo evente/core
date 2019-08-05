@@ -1,5 +1,5 @@
-[![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evente/core/maintainability)
-[![Test Coverage](https://badgen.net/codeclimate/coverage/evente/core)](https://codeclimate.com/github/evente/core/test_coverage)
+[![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evente/core)
+[![Test Coverage](https://badgen.net/codeclimate/coverage/evente/core)](https://codeclimate.com/github/evente/core)
 [![Build Status](https://badgen.net/travis/evente/core)](https://travis-ci.org/evente/core)
 ![Size](https://badgen.net/badgesize/normal/evente/core/master/dist/evente.min.js)
 ![GZip Size](https://badgen.net/badgesize/gzip/evente/core/master/dist/evente.min.js)

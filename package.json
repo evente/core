@@ -21,7 +21,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/jest": "^24.0.15",
-    "jest": "^24.5.0",
+    "jest": "^24.8.0",
     "jsdoc": "^3.6.2",
     "madge": "^3.4.4",
     "uglify-es": "^3.3.9"

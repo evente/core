@@ -36,21 +36,26 @@ class EventeAttributeBase extends EventeAttribute {
     /**
      * Change alias in expressions on base path
      * @private
-     * @param {Element | Text} node DOM node
+     * @param {ChildNode | Element | Text} node DOM node
      * @param {string} alias Alias name
      * @param {string} base Base path
      */
     dealias(node, alias, base) {
-        let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
+        let value,
+            regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
+            test = new RegExp('{{');
         if ( node instanceof Text ) {
             if ( node.e_base ) {
                 value = node.e_base.replace(regexp, '$1' + base + '$2');
             } else {
-                if ( node.nodeValue.match(regexp) ) {
-                    node.e_base = node.nodeValue;
-                    value = node.nodeValue.replace(regexp, '$1' + base + '$2');
-                } else
-                    value = node.nodeValue;
+                value = node.nodeValue;
+                if ( value.match(test) ) {
+                    value = this.preparse(value);
+                    if ( value.match(regexp) ) {
+                        node.e_base = value;
+                        value = value.replace(regexp, '$1' + base + '$2');
+                    }
+                }
             }
             if ( node.nodeValue !== value ) {
                 node.nodeValue = value;
@@ -63,10 +68,11 @@ class EventeAttributeBase extends EventeAttribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
             if ( node.e_base[item.name] ) {
                 value = node.e_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
+                value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
+                value = this.preparse(value);
                 if ( value.match(regexp) ) {
                     node.e_base[item.name] = value;
                     value = value.replace(regexp, '$1' + base + '$2');

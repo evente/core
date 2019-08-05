@@ -8,7 +8,7 @@ const EventeStrings = require('./EventeStrings');
 class EventeExpression {
 
     /**
-     * @param {string} string 
+     * @param {string} string Expression string
      */
     constructor(string) {
         this.expression = string;
@@ -43,12 +43,9 @@ class EventeExpression {
                             tmp = this.eval(model, item.params[i]);
                             if ( tmp === undefined || tmp === null )
                                 continue;
-                            if ( (value === undefined || typeof value === 'number') && typeof tmp !== 'number' ) {
-                                number = parseFloat(tmp);
-                                if ( !isNaN(number) )
-                                    tmp = number;
-                            }
-                            value = value === undefined ? tmp : EventeExpression.operations[item.type].func(value, tmp);
+                            if ( (value === undefined || typeof value === 'number') && typeof tmp !== 'number' )
+                                tmp = this.parse_number(tmp);
+                            value = value === undefined ? tmp : EventeExpression.operations[item.type].eval(value, tmp);
                         }
                         break;
                     case '&':
@@ -58,12 +55,9 @@ class EventeExpression {
                         value = [];
                         for ( let i in item.params ) {
                             tmp = this.eval(model, item.params[i]);
-                            number = parseFloat(tmp);
-                            if ( !isNaN(number) )
-                                tmp = number;
-                            value.push(tmp);
+                            value.push(this.parse_number(tmp));
                             if ( value.length > 1 )
-                                value = [ EventeExpression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ EventeExpression.operations[item.type].eval(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -138,6 +132,18 @@ class EventeExpression {
                 }
         }
         return links;
+    }
+
+    /**
+     * Moves unclosed strings into expression and
+     * convert strings into variables
+     * @public
+     * @param {string} data Expression string
+     * @returns {string}
+     */
+    preparse(data) {
+        data = this.parse_unclosed(data);
+        return '{{' + this.parse_strings(data) + '}}';
     }
 
     /**
@@ -365,12 +371,8 @@ class EventeExpression {
                             else
                                 item.params.push({type: '.', params: [item.params.pop(), token]});
                         }
-                    } else {
-                        tmp = parseFloat(token);
-                        if ( !isNaN(tmp) )
-                            token = tmp;
-                        item.params.push(token);
-                    }
+                    } else
+                        item.params.push(this.parse_number(token));
             }
         }
         if ( item.type === undefined )
@@ -378,17 +380,28 @@ class EventeExpression {
         return item;
     }
 
+    /**
+     * Try to parse string as number
+     * @private
+     * @param {string} value
+     * @returns {string|number}
+     */
+    parse_number(value) {
+        let tmp = parseFloat(value)
+        return !isNaN(tmp) && tmp.toString() == value ? tmp : value;
+    }
+
 };
 
 EventeExpression.operations = {
-    '+': { priority: 0, func: function(a, b) { return a + b; } },
-    '-': { priority: 0, func: function(a, b) { return a - b; } },
-    '*': { priority: 1, func: function(a, b) { return a * b; } },
-    '/': { priority: 1, func: function(a, b) { return a / b; } },
-    '&': { priority: 2, func: function(a, b) { return Boolean(a && b); } },
-    '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
-    '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
-    '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
+    '+': { priority: 0, eval: function(a, b) { return a + b; } },
+    '-': { priority: 0, eval: function(a, b) { return a - b; } },
+    '*': { priority: 1, eval: function(a, b) { return a * b; } },
+    '/': { priority: 1, eval: function(a, b) { return a / b; } },
+    '&': { priority: 2, eval: function(a, b) { return Boolean(a && b); } },
+    '?': { priority: 2, eval: function(a, b) { return Boolean(a || b); } },
+    '=': { priority: 3, eval: function(a, b) { return Boolean(a == b); } },
+    '#': { priority: 3, eval: function(a, b) { return Boolean(a != b); } },
     '!': { priority: 4 },
     '.': { priority: 5 },
     '[]': { priority: 6 },

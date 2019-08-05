@@ -79,7 +79,7 @@ evente.resource = function(url, type) {
 class EventeExpression {
 
     /**
-     * @param {string} string 
+     * @param {string} string Expression string
      */
     constructor(string) {
         this.expression = string;
@@ -114,12 +114,9 @@ class EventeExpression {
                             tmp = this.eval(model, item.params[i]);
                             if ( tmp === undefined || tmp === null )
                                 continue;
-                            if ( (value === undefined || typeof value === 'number') && typeof tmp !== 'number' ) {
-                                number = parseFloat(tmp);
-                                if ( !isNaN(number) )
-                                    tmp = number;
-                            }
-                            value = value === undefined ? tmp : EventeExpression.operations[item.type].func(value, tmp);
+                            if ( (value === undefined || typeof value === 'number') && typeof tmp !== 'number' )
+                                tmp = this.parse_number(tmp);
+                            value = value === undefined ? tmp : EventeExpression.operations[item.type].eval(value, tmp);
                         }
                         break;
                     case '&':
@@ -129,12 +126,9 @@ class EventeExpression {
                         value = [];
                         for ( let i in item.params ) {
                             tmp = this.eval(model, item.params[i]);
-                            number = parseFloat(tmp);
-                            if ( !isNaN(number) )
-                                tmp = number;
-                            value.push(tmp);
+                            value.push(this.parse_number(tmp));
                             if ( value.length > 1 )
-                                value = [ EventeExpression.operations[item.type].func(value[0], value[1]) ];
+                                value = [ EventeExpression.operations[item.type].eval(value[0], value[1]) ];
                         }
                         value = value[0];
                         break;
@@ -209,6 +203,18 @@ class EventeExpression {
                 }
         }
         return links;
+    }
+
+    /**
+     * Moves unclosed strings into expression and
+     * convert strings into variables
+     * @public
+     * @param {string} data Expression string
+     * @returns {string}
+     */
+    preparse(data) {
+        data = this.parse_unclosed(data);
+        return '{{' + this.parse_strings(data) + '}}';
     }
 
     /**
@@ -436,12 +442,8 @@ class EventeExpression {
                             else
                                 item.params.push({type: '.', params: [item.params.pop(), token]});
                         }
-                    } else {
-                        tmp = parseFloat(token);
-                        if ( !isNaN(tmp) )
-                            token = tmp;
-                        item.params.push(token);
-                    }
+                    } else
+                        item.params.push(this.parse_number(token));
             }
         }
         if ( item.type === undefined )
@@ -449,17 +451,28 @@ class EventeExpression {
         return item;
     }
 
+    /**
+     * Try to parse string as number
+     * @private
+     * @param {string} value
+     * @returns {string|number}
+     */
+    parse_number(value) {
+        let tmp = parseFloat(value)
+        return !isNaN(tmp) && tmp.toString() == value ? tmp : value;
+    }
+
 };
 
 EventeExpression.operations = {
-    '+': { priority: 0, func: function(a, b) { return a + b; } },
-    '-': { priority: 0, func: function(a, b) { return a - b; } },
-    '*': { priority: 1, func: function(a, b) { return a * b; } },
-    '/': { priority: 1, func: function(a, b) { return a / b; } },
-    '&': { priority: 2, func: function(a, b) { return Boolean(a && b); } },
-    '?': { priority: 2, func: function(a, b) { return Boolean(a || b); } },
-    '=': { priority: 3, func: function(a, b) { return Boolean(a == b); } },
-    '#': { priority: 3, func: function(a, b) { return Boolean(a != b); } },
+    '+': { priority: 0, eval: function(a, b) { return a + b; } },
+    '-': { priority: 0, eval: function(a, b) { return a - b; } },
+    '*': { priority: 1, eval: function(a, b) { return a * b; } },
+    '/': { priority: 1, eval: function(a, b) { return a / b; } },
+    '&': { priority: 2, eval: function(a, b) { return Boolean(a && b); } },
+    '?': { priority: 2, eval: function(a, b) { return Boolean(a || b); } },
+    '=': { priority: 3, eval: function(a, b) { return Boolean(a == b); } },
+    '#': { priority: 3, eval: function(a, b) { return Boolean(a != b); } },
     '!': { priority: 4 },
     '.': { priority: 5 },
     '[]': { priority: 6 },
@@ -679,21 +692,26 @@ class EventeAttributeBase extends EventeAttribute {
     /**
      * Change alias in expressions on base path
      * @private
-     * @param {Element | Text} node DOM node
+     * @param {ChildNode | Element | Text} node DOM node
      * @param {string} alias Alias name
      * @param {string} base Base path
      */
     dealias(node, alias, base) {
-        let value, regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim');
+        let value,
+            regexp = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
+            test = new RegExp('{{');
         if ( node instanceof Text ) {
             if ( node.e_base ) {
                 value = node.e_base.replace(regexp, '$1' + base + '$2');
             } else {
-                if ( node.nodeValue.match(regexp) ) {
-                    node.e_base = node.nodeValue;
-                    value = node.nodeValue.replace(regexp, '$1' + base + '$2');
-                } else
-                    value = node.nodeValue;
+                value = node.nodeValue;
+                if ( value.match(test) ) {
+                    value = this.preparse(value);
+                    if ( value.match(regexp) ) {
+                        node.e_base = value;
+                        value = value.replace(regexp, '$1' + base + '$2');
+                    }
+                }
             }
             if ( node.nodeValue !== value ) {
                 node.nodeValue = value;
@@ -706,10 +724,11 @@ class EventeAttributeBase extends EventeAttribute {
         let i, item, items = node.attributes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
-            value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
             if ( node.e_base[item.name] ) {
                 value = node.e_base[item.name].replace(regexp, '$1' + base + '$2');
             } else {
+                value = EventeAttribute.attributes[item.name] ? EventeAttribute.attributes[item.name].check(node, item.name) : item.value;
+                value = this.preparse(value);
                 if ( value.match(regexp) ) {
                     node.e_base[item.name] = value;
                     value = value.replace(regexp, '$1' + base + '$2');
@@ -801,27 +820,34 @@ class EventeAttributeFor extends EventeAttribute {
     /**
      * Change alias in expressions on base path
      * @private
-     * @param {Element|Text} node DOM node
+     * @param {ChildNode | Element | Text} node DOM node
      * @param {string} alias Alias name
      * @param {string} base Base path
      */
     dealias(node, alias, base) {
-        let replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
+        let value,
+            replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
             test = new RegExp('{{');
         if ( node instanceof Text ) {
-            if ( node.nodeValue.match(replace) )
-                node.nodeValue = node.nodeValue.replace(replace, '$1' + base + '$2');
+            value = node.nodeValue;
+            if ( !value.match(test) )
+                return;
+            value = this.preparse(value);
+            if ( value.match(replace) )
+                node.nodeValue = value.replace(replace, '$1' + base + '$2');
             return;
         }
-        let i, item, items = node.attributes;
-        for ( i = 0; i < items.length; i++ ) {
-            item = items[i];
-            if ( !EventeAttribute.attributes[item.name] && !item.value.match(test) )
+        let i, attr, attrs = node.attributes;
+        for ( i = 0; i < attrs.length; i++ ) {
+            attr = attrs[i];
+            value = attr.value;
+            if ( !EventeAttribute.attributes[attr.name] && !value.match(test) )
                 continue;
-            if ( item.value.match(replace) )
-                item.value = item.value.replace(replace, '$1' + base + '$2');
+            value = this.preparse(value);
+            if ( value.match(replace) )
+                attr.value = value.replace(replace, '$1' + base + '$2');
         }
-        items = node.childNodes;
+        let item, items = node.childNodes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
             if (
@@ -929,7 +955,6 @@ class EventeAttributeModel extends EventeAttribute {
 };
 
 EventeAttribute.attributes['e-model'] = EventeAttributeModel;
-
 
 
 /**
@@ -1169,7 +1194,6 @@ class EventeModel {
 }
 
 
-
 /**
  * Evente Model Proxy Handler class
  */
@@ -1272,9 +1296,6 @@ class EventeModelProxyHandler {
 }
 
 
-
-
-
 /**
  * Evente HTML template parser
  */
@@ -1367,7 +1388,6 @@ class EventeParser {
     }
 }
 
-
 const EventePipes = {
 
     empty: function(params) {
@@ -1406,7 +1426,6 @@ const EventePipes = {
     },
 
 }
-
 
 /**
  * Evente Resource class
@@ -1526,8 +1545,8 @@ EventeResource.headers = {};
 class EventeRouter {
 
     /**
-     * 
-     * @param {Node} node 
+     *
+     * @param {Node} node
      */
     constructor(node) {
         EventeRouter.routers.push(this);
@@ -1919,5 +1938,4 @@ class EventeStrings {
 }
 
 EventeStrings.strings = [];
-
 

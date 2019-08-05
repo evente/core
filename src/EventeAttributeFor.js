@@ -62,27 +62,34 @@ class EventeAttributeFor extends EventeAttribute {
     /**
      * Change alias in expressions on base path
      * @private
-     * @param {Element|Text} node DOM node
+     * @param {ChildNode | Element | Text} node DOM node
      * @param {string} alias Alias name
      * @param {string} base Base path
      */
     dealias(node, alias, base) {
-        let replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
+        let value,
+            replace = new RegExp('(^|[^a-z])' + alias.replace(/\./g, '\\.') + '([^a-z]|$)', 'gim'),
             test = new RegExp('{{');
         if ( node instanceof Text ) {
-            if ( node.nodeValue.match(replace) )
-                node.nodeValue = node.nodeValue.replace(replace, '$1' + base + '$2');
+            value = node.nodeValue;
+            if ( !value.match(test) )
+                return;
+            value = this.preparse(value);
+            if ( value.match(replace) )
+                node.nodeValue = value.replace(replace, '$1' + base + '$2');
             return;
         }
-        let i, item, items = node.attributes;
-        for ( i = 0; i < items.length; i++ ) {
-            item = items[i];
-            if ( !EventeAttribute.attributes[item.name] && !item.value.match(test) )
+        let i, attr, attrs = node.attributes;
+        for ( i = 0; i < attrs.length; i++ ) {
+            attr = attrs[i];
+            value = attr.value;
+            if ( !EventeAttribute.attributes[attr.name] && !value.match(test) )
                 continue;
-            if ( item.value.match(replace) )
-                item.value = item.value.replace(replace, '$1' + base + '$2');
+            value = this.preparse(value);
+            if ( value.match(replace) )
+                attr.value = value.replace(replace, '$1' + base + '$2');
         }
-        items = node.childNodes;
+        let item, items = node.childNodes;
         for ( i = 0; i < items.length; i++ ) {
             item = items[i];
             if (
