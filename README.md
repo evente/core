@@ -1,10 +1,11 @@
+# Evente Core
 [![Maintainability](https://badgen.net/codeclimate/maintainability/evente/core)](https://codeclimate.com/github/evente/core)
 [![Test Coverage](https://badgen.net/codeclimate/coverage/evente/core)](https://codeclimate.com/github/evente/core)
 [![Build Status](https://badgen.net/travis/evente/core)](https://travis-ci.org/evente/core)
 ![Size](https://badgen.net/badgesize/normal/evente/core/master/dist/evente.min.js)
 ![GZip Size](https://badgen.net/badgesize/gzip/evente/core/master/dist/evente.min.js)
 
-`Evente` - javascript library for building reactive web applications. Library is suitable for writing web applications from scratch and also for using in existing applications. Its size is very small and cause low impact on the loading time.
+Core of `Evente` - javascript library for building reactive web applications. Library is suitable for writing web applications from scratch and also for using in existing applications. Its size is very small and cause low impact on the loading time.
 
 # Features
 - `jQuery`-like objects with subset of well known methods: `addClass`, `attr`, `closest`, `contains`, `end`, `find`, `get`, `hasClass`, `html`, `is`, `parent`, `removeClass`, `text`, `toggleClass`, `val`
@@ -53,7 +54,7 @@ Try it on [CodePen](https://codepen.io/apoprotsky/pen/XOpzxV). Full application 
     </div>
 
     <!-- Evente library -->
-    <script src="https://cdn.jsdelivr.net/gh/evente/core/dist/evente.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/evente/core@1.0.1/dist/evente.min.js"></script>
 
     <!-- Application code -->
     <script>

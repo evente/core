@@ -1,13 +1,20 @@
 {
   "name": "@evente/core",
-  "version": "1.0.0",
+  "version": "1.0.2",
+  "description": "Javascript library for building reactive web applications",
   "author": "Andrey Poprotsky",
   "license": "MIT",
   "homepage": "https://github.com/evente/core",
   "main": "dist/evente.js",
+  "keywords": [
+    "evente",
+    "core",
+    "javascript",
+    "reactive"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evente/core.git"
+    "url": "https://github.com/evente/core.git"
   },
   "bugs": {
     "url": "https://github.com/evente/core/issues"
