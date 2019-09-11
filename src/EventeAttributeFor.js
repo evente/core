@@ -82,8 +82,8 @@ class EventeAttributeFor extends EventeAttribute {
         let i, attr, attrs = node.attributes;
         for ( i = 0; i < attrs.length; i++ ) {
             attr = attrs[i];
-            value = attr.value;
-            if ( !EventeAttribute.attributes[attr.name] && !value.match(test) )
+            value = EventeAttribute.attributes[attr.name] ? EventeAttribute.attributes[attr.name].check(node, attr.name) : attr.value;
+            if ( !value.match(test) )
                 continue;
             value = this.preparse(value);
             if ( value.match(replace) )
