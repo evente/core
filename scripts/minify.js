@@ -1,5 +1,5 @@
 const fs = require('fs');
-const uglify = require("uglify-es");
+const uglify = require("uglify-js");
 const uglifyOptions = {
     compress: {
         drop_console: true,
@@ -41,7 +41,7 @@ const inputFiles = [
 
 function minify() {
     let inputCode = '';
-    inputFiles.forEach(function(file) {
+    inputFiles.forEach(function (file) {
         console.log(inputDir + file);
         inputCode += fs.readFileSync(inputDir + file, 'utf-8');
     });
